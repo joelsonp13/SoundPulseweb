@@ -1,0 +1,927 @@
+/* ====================================
+   GLOBAL STYLES
+   ==================================== */
+
+body {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+    overflow-x: hidden;
+}
+
+/* ============ APP CONTAINER ============ */
+
+.app-container {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    grid-template-rows: 1fr var(--player-height);
+    grid-template-areas:
+        "sidebar main"
+        "player player";
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    grid-area: sidebar;
+}
+
+.main-content {
+    grid-area: main;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.player {
+    grid-area: player;
+}
+
+/* ============ TYPOGRAPHY ============ */
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    color: var(--color-text-primary);
+}
+
+h1 {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-black);
+}
+
+h2 {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+}
+
+h3 {
+    font-size: var(--font-size-2xl);
+}
+
+h4 {
+    font-size: var(--font-size-xl);
+}
+
+h5 {
+    font-size: var(--font-size-lg);
+}
+
+h6 {
+    font-size: var(--font-size-md);
+}
+
+p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+    color: var(--color-text-tertiary);
+}
+
+.text-subdued {
+    color: var(--color-text-subdued);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-warning {
+    color: var(--color-warning);
+}
+
+.text-error {
+    color: var(--color-error);
+}
+
+/* ============ LINKS ============ */
+
+a {
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast) var(--ease-in-out);
+}
+
+a:hover {
+    color: var(--color-primary);
+}
+
+a:active {
+    color: var(--color-primary-active);
+}
+
+/* ============ BUTTONS ============ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--border-radius-full);
+    cursor: pointer;
+    transition: all var(--transition-base) var(--ease-in-out);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: scale(1.04);
+}
+
+.btn-primary:active {
+    background-color: var(--color-primary-active);
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    border: var(--border-width) solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-bg-hover);
+    border-color: var(--color-text-tertiary);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--color-text-primary);
+    border: var(--border-width) solid var(--color-text-secondary);
+}
+
+.btn-outline:hover {
+    border-color: var(--color-text-primary);
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+}
+
+.btn-ghost:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: var(--border-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ============ CARDS ============ */
+
+.card {
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    transition: all var(--transition-base) var(--ease-in-out);
+    cursor: pointer;
+}
+
+.card:hover {
+    background-color: var(--color-bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.card-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+    position: relative;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============ FORMS ============ */
+
+.input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-tertiary);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-base) var(--ease-in-out);
+}
+
+.input:hover {
+    border-color: var(--color-text-tertiary);
+}
+
+.input:focus {
+    border-color: var(--color-primary);
+    background-color: var(--color-bg-elevated);
+}
+
+.input::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+/* ============ UTILITY CLASSES ============ */
+
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.gap-md {
+    gap: var(--spacing-md);
+}
+
+.gap-lg {
+    gap: var(--spacing-lg);
+}
+
+.w-full {
+    width: 100%;
+}
+
+.h-full {
+    height: 100%;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ============ SCROLLBAR ============ */
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-text-tertiary) var(--color-bg-tertiary);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--color-bg-tertiary);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-text-tertiary);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-secondary);
+}
+
+/* ============ LOADING STATES ============ */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-tertiary) 0%,
+        var(--color-bg-hover) 50%,
+        var(--color-bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--border-radius-md);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-bg-tertiary);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+}
+
+/* ============ ANIMATIONS ============ */
+
+.fade-in {
+    animation: fadeIn var(--animation-duration-base) var(--ease-in-out);
+}
+
+.fade-out {
+    animation: fadeOut var(--animation-duration-base) var(--ease-in-out);
+}
+
+.slide-in-up {
+    animation: slideInUp var(--animation-duration-base) var(--ease-in-out);
+}
+
+.slide-in-down {
+    animation: slideInDown var(--animation-duration-base) var(--ease-in-out);
+}
+
+.slide-in-left {
+    animation: slideInLeft var(--animation-duration-base) var(--ease-in-out);
+}
+
+.slide-in-right {
+    animation: slideInRight var(--animation-duration-base) var(--ease-in-out);
+}
+
+.scale-in {
+    animation: scaleIn var(--animation-duration-base) var(--ease-in-out);
+}
+
+/* ============ TOP BAR ============ */
+
+.top-bar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-topbar);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background-color: var(--color-bg-primary);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.top-bar-left,
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.btn-nav {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg-tertiary);
+    border-radius: var(--border-radius-full);
+    cursor: pointer;
+    transition: all var(--transition-base) var(--ease-in-out);
+}
+
+.btn-nav:hover {
+    background-color: var(--color-bg-hover);
+    transform: scale(1.05);
+}
+
+.btn-nav:active {
+    transform: scale(0.95);
+}
+
+.btn-nav svg {
+    width: 20px;
+    height: 20px;
+    color: var(--color-text-primary);
+}
+
+.btn-nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ============ VIEW CONTAINER ============ */
+
+.view-container {
+    min-height: calc(100vh - var(--player-height) - var(--topbar-height));
+    padding: var(--spacing-xl);
+    animation: fadeIn var(--animation-duration-base) var(--ease-in-out);
+}
+
+/* ============ SECTION ============ */
+
+.section {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+}
+
+.section-link {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-base) var(--ease-in-out);
+}
+
+.section-link:hover {
+    color: var(--color-text-primary);
+}
+
+/* ============ GRID LAYOUTS ============ */
+
+.grid {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.grid-5 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.grid-6 {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.grid-auto {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+/* ============ CAROUSEL ============ */
+
+/* Carousel wrapper com botões */
+.carousel-wrapper {
+    position: relative;
+}
+
+.carousel {
+    display: flex;
+    gap: var(--spacing-lg);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: var(--spacing-sm);
+    padding-left: var(--spacing-xs);
+    padding-right: var(--spacing-xs);
+}
+
+.carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.carousel-item {
+    flex: 0 0 auto;
+    width: 200px;
+}
+
+/* Cards dentro do carrossel devem ter largura fixa */
+.carousel .music-card,
+.carousel .playlist-card,
+.carousel .album-card,
+.carousel .artist-card {
+    flex: 0 0 auto;
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+}
+
+/* Garantir que imagens dos cards mantenham proporção 1:1 */
+.carousel .music-card-image,
+.carousel .playlist-card-image,
+.carousel .album-card-image,
+.carousel .artist-card-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+}
+
+/* Botões de navegação do carrossel */
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity var(--transition-base) var(--ease-in-out);
+    pointer-events: none;
+}
+
+.carousel-wrapper:hover .carousel-nav {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.carousel-nav:hover {
+    background-color: rgba(0, 0, 0, 0.95);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.carousel-nav-prev {
+    left: -24px;
+}
+
+.carousel-nav-next {
+    right: -24px;
+}
+
+.carousel-nav svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+/* ============ MODALS & OVERLAYS ============ */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-overlay);
+    z-index: var(--z-modal);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--animation-duration-fast) var(--ease-in-out);
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: scaleIn var(--animation-duration-base) var(--ease-in-out);
+    box-shadow: var(--shadow-large);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-full);
+    cursor: pointer;
+    transition: background-color var(--transition-base) var(--ease-in-out);
+}
+
+.modal-close:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.modal-body {
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-footer {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+}
+
+/* ============ TOAST NOTIFICATIONS ============ */
+
+.toast-container {
+    position: fixed;
+    bottom: calc(var(--player-height) + var(--spacing-md));
+    right: var(--spacing-md);
+    z-index: var(--z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    pointer-events: none;
+}
+
+.toast {
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-medium);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 300px;
+    max-width: 500px;
+    animation: slideInRight var(--animation-duration-base) var(--ease-in-out);
+    pointer-events: auto;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+    position: fixed;
+    bottom: calc(var(--player-height) + var(--spacing-md));
+    right: var(--spacing-md);
+    z-index: var(--z-toast);
+}
+
+.toast.success {
+    border-left: 4px solid var(--color-success);
+}
+
+.toast.error {
+    border-left: 4px solid var(--color-error);
+}
+
+.toast.warning {
+    border-left: 4px solid var(--color-warning);
+}
+
+.toast.info {
+    border-left: 4px solid var(--color-info);
+}
+
+.toast-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.toast-message {
+    flex: 1;
+    font-size: var(--font-size-sm);
+}
+
+/* ============ MOBILE MENU TOGGLE ============ */
+
+.btn-menu-toggle {
+    display: none; /* Hidden on desktop */
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    margin-right: var(--spacing-sm);
+}
+
+.btn-menu-toggle:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.btn-menu-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* ============ SIDEBAR OVERLAY ============ */
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: calc(var(--z-sidebar) - 1);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-base), visibility var(--transition-base);
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============ PERFORMANCE OPTIMIZATIONS ============ */
+
+/* Force GPU acceleration for smooth animations */
+.music-card,
+.album-card,
+.playlist-card,
+.artist-card,
+.genre-card,
+.track-item,
+.btn,
+.nav-link {
+    transform: translateZ(0);
+    will-change: auto;
+}
+
+/* Contain layout to improve rendering performance */
+.music-card,
+.album-card,
+.playlist-card,
+.artist-card,
+.genre-card,
+.carousel-item {
+    contain: layout style paint;
+}
+
+/* Content visibility for large lists */
+.track-list,
+.search-results,
+.library-grid,
+.browse-grid {
+    content-visibility: auto;
+}
+
+/* Remove will-change after animation */
+.music-card:hover,
+.album-card:hover,
+.playlist-card:hover {
+    will-change: transform;
+}
+
+.music-card,
+.album-card,
+.playlist-card {
+    transition-property: transform, box-shadow, background-color;
+}
+
+/* ============ REDUCED MOTION ============ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    /* Disable hover transforms */
+    .music-card:hover,
+    .album-card:hover,
+    .playlist-card:hover,
+    .artist-card:hover,
+    .genre-card:hover,
+    .btn:hover,
+    .nav-link:hover {
+        transform: none !important;
+    }
+    
+    /* Disable modal animations */
+    .modal-overlay,
+    .fullscreen-player,
+    .sidebar-overlay {
+        animation: none !important;
+    }
+    
+    /* Disable progress animations */
+    .progress-bar-fill,
+    .volume-fill,
+    .episode-progress-fill {
+        transition: none !important;
+    }
+    
+    /* Keep essential animations only */
+    .btn-play-pause,
+    .player-controls {
+        transition: opacity 0.1s ease !important;
+    }
+}
+

@@ -1,0 +1,98 @@
+/* ====================================
+   PERFORMANCE OPTIMIZATIONS - CSS
+   ==================================== */
+
+/* 🚀 Lazy loading: imagens aparecem com fade suave */
+img[loading="lazy"] {
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+}
+
+img[loading="lazy"].loaded,
+img[loading="lazy"]:not([data-src]) {
+    opacity: 1;
+}
+
+/* 🚀 Placeholder blur enquanto carrega */
+img[data-src] {
+    filter: blur(5px);
+    transition: filter 0.3s ease-in;
+}
+
+img[data-src].loaded {
+    filter: blur(0);
+}
+
+/* 🚀 GPU acceleration para scrolling suave */
+.carousel,
+.music-card,
+.greeting-card,
+.result-item {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* 🚀 Content-visibility: renderização preguiçosa de seções */
+.section,
+.carousel-wrapper,
+.search-results-list {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px; /* Altura estimada para evitar layout shift */
+}
+
+/* 🚀 Otimizar rendering de imagens */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* 🚀 Prevenir layout shift durante carregamento */
+.music-card-image,
+.greeting-card img,
+.result-item-image img {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+/* 🚀 Skeleton loader otimizado */
+.skeleton {
+    animation: skeleton-loading 1.2s ease-in-out infinite;
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-secondary) 0%,
+        var(--color-bg-tertiary) 50%,
+        var(--color-bg-secondary) 100%
+    );
+    background-size: 200% 100%;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* 🚀 Reduced motion para acessibilidade e performance */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    img[loading="lazy"],
+    img[data-src] {
+        transition: none;
+    }
+}
+
+/* 🚀 Otimizar para telas de alta densidade (Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    img {
+        image-rendering: -webkit-optimize-contrast;
+    }
+}
+

@@ -1,0 +1,285 @@
+/* ====================================
+   ARTIST PAGE
+   ==================================== */
+
+.artist-view {
+    animation: fadeIn var(--animation-duration-base) var(--ease-in-out);
+}
+
+.artist-hero {
+    position: relative;
+    height: 400px;
+    margin: calc(var(--spacing-xl) * -1);
+    margin-bottom: var(--spacing-xl);
+    background: var(--gradient-primary);
+}
+
+.artist-hero-bg {
+    position: absolute;
+    inset: 0;
+}
+
+.artist-hero-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.5;
+}
+
+.artist-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.artist-hero-content {
+    position: relative;
+    height: 100%;
+    padding: var(--spacing-3xl);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.artist-verified {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-white);
+    margin-bottom: var(--spacing-sm);
+}
+
+.artist-verified svg {
+    width: 20px;
+    height: 20px;
+    color: var(--color-accent-blue);
+}
+
+.artist-name {
+    font-size: clamp(2rem, 6vw, 6rem);
+    font-weight: var(--font-weight-black);
+    color: var(--color-white);
+    margin-bottom: var(--spacing-md);
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.artist-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    font-size: var(--font-size-base);
+    color: var(--color-white);
+}
+
+.artist-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.btn-follow {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    border: 1px solid var(--color-text-primary);
+    border-radius: var(--border-radius-full);
+    color: var(--color-text-primary);
+    background-color: transparent;
+    cursor: pointer;
+    transition: all var(--transition-base) var(--ease-in-out);
+}
+
+.btn-follow:hover {
+    transform: scale(1.04);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-follow.following {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.artist-popular {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.artist-popular-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-lg);
+}
+
+.artist-discography {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.discography-filters {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.artist-about {
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+}
+
+.artist-about-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-md);
+}
+
+.artist-bio {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--spacing-md);
+}
+
+.artist-bio.collapsed {
+    max-height: 100px;
+    overflow: hidden;
+}
+
+.btn-show-more {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: color var(--transition-base) var(--ease-in-out);
+}
+
+.btn-show-more:hover {
+    color: var(--color-primary);
+}
+
+/* ========== TOP TRACKS COM THUMBNAILS ========== */
+
+.artist-view .track-item {
+    display: grid;
+    grid-template-columns: 40px 48px 1fr auto 40px;
+    gap: var(--spacing-md);
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.artist-view .track-thumbnail {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+}
+
+.artist-view .track-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.artist-view .track-info {
+    min-width: 0;
+    flex: none;
+}
+
+.artist-view .track-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
+
+.artist-view .track-artist {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.artist-view .track-duration {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    text-align: right;
+    min-width: 50px;
+}
+
+.artist-view .track-play {
+    opacity: 0;
+    transition: opacity var(--transition-base) var(--ease-in-out);
+}
+
+.artist-view .track-item:hover .track-play {
+    opacity: 1;
+}
+
+/* ====================================
+   ARTISTAS RELACIONADOS - CARDS REDONDOS
+   ==================================== */
+
+.artist-card-related {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-lg);
+    background: var(--color-bg-secondary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    min-width: 150px;
+}
+
+.artist-card-related:hover {
+    background: var(--color-bg-tertiary);
+    transform: translateY(-4px);
+}
+
+.artist-card-image-round {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: var(--spacing-md);
+}
+
+.artist-card-image-round img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.artist-card-info-center {
+    text-align: center;
+    width: 100%;
+}
+
+.artist-card-name {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.artist-card-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.artist-card-collab {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+

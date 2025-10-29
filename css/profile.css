@@ -1,0 +1,89 @@
+/* ====================================
+   PROFILE PAGE
+   ==================================== */
+
+.profile-view {
+    animation: fadeIn var(--animation-duration-base) var(--ease-in-out);
+}
+
+.profile-stats {
+    display: flex;
+    gap: var(--spacing-2xl);
+    margin-bottom: var(--spacing-3xl);
+}
+
+.profile-stat {
+    text-align: center;
+}
+
+.profile-stat-value {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.profile-stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profile-top {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.profile-top-tabs {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-top-tab {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition-base) var(--ease-in-out);
+}
+
+.profile-top-tab:hover {
+    color: var(--color-text-primary);
+}
+
+.profile-top-tab.active {
+    color: var(--color-text-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.profile-top-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.profile-playlists {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.btn-edit-profile {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    background-color: transparent;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-text-secondary);
+    border-radius: var(--border-radius-full);
+    cursor: pointer;
+    transition: all var(--transition-base) var(--ease-in-out);
+}
+
+.btn-edit-profile:hover {
+    border-color: var(--color-text-primary);
+    transform: scale(1.02);
+}
+

@@ -1,0 +1,106 @@
+/* ====================================
+   BROWSE/DISCOVER PAGE
+   ==================================== */
+
+.browse-view {
+    animation: fadeIn var(--animation-duration-base) var(--ease-in-out);
+}
+
+.browse-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-black);
+    margin-bottom: var(--spacing-xl);
+}
+
+.genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-3xl);
+}
+
+.mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.charts-section {
+    margin-top: var(--spacing-3xl);
+}
+
+.charts-tabs {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chart-tab {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition-base) var(--ease-in-out);
+}
+
+.chart-tab:hover {
+    color: var(--color-text-primary);
+}
+
+.chart-tab.active {
+    color: var(--color-text-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.chart-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.chart-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-base) var(--ease-in-out);
+}
+
+.chart-item:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.chart-rank {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    min-width: 40px;
+    text-align: center;
+}
+
+.chart-rank-change {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.chart-rank-change.up {
+    color: var(--color-success);
+}
+
+.chart-rank-change.down {
+    color: var(--color-error);
+}
+
+.chart-rank-change svg {
+    width: 12px;
+    height: 12px;
+}
+

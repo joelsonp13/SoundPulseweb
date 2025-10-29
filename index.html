@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SoundPulse - Streaming de música online com milhões de músicas, álbuns e playlists">
+    <meta name="theme-color" content="#1DB954">
+    <title>SoundPulse - Your Music, Your Way</title>
+    
+    <!-- 🚀 PERFORMANCE: DNS Prefetch & Preconnect -->
+    <link rel="preconnect" href="http://localhost:5000" crossorigin>
+    <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+    <link rel="dns-prefetch" href="//lh3.googleusercontent.com">
+    <link rel="dns-prefetch" href="//www.youtube.com">
+    
+    <!-- 🚀 CSS Bundificado (20 arquivos → 1 arquivo!) -->
+    <link rel="stylesheet" href="css/bundle.css">
+    
+    <!-- YouTube IFrame API (defer para não bloquear) -->
+    <script defer src="https://www.youtube.com/iframe_api"></script>
+    
+    <!-- Filtro de Erros do YouTube (Desenvolvimento) -->
+    <script>
+        // Suprimir avisos conhecidos do YouTube IFrame API que não afetam a funcionalidade
+        (function() {
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            
+            // Lista de padrões a serem filtrados
+            const errorPatterns = [
+                'postMessage',
+                'DOMWindow',
+                'target origin',
+                'youtube.com',
+                'ytimg.com',
+                'googlevideo.com',
+                'Failed to load resource',
+                'ERR_BLOCKED_BY_CLIENT'
+            ];
+            
+            // Filtrar console.error
+            console.error = function(...args) {
+                const message = String(args[0] || '');
+                
+                // Verificar se contém algum padrão do YouTube
+                if (errorPatterns.some(pattern => message.includes(pattern))) {
+                    return; // Silenciar completamente
+                }
+                
+                // Passar outros erros normalmente
+                originalError.apply(console, args);
+            };
+            
+            // Filtrar console.warn
+            console.warn = function(...args) {
+                const message = String(args[0] || '');
+                
+                // Verificar se contém algum padrão do YouTube
+                if (errorPatterns.some(pattern => message.includes(pattern))) {
+                    return; // Silenciar
+                }
+                
+                // Passar outros warnings normalmente
+                originalWarn.apply(console, args);
+            };
+            
+            // Interceptar erros globais do YouTube e requests bloqueados
+            window.addEventListener('error', function(event) {
+                if (event.message) {
+                    const msg = String(event.message);
+                    if (errorPatterns.some(pattern => msg.includes(pattern))) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }
+                }
+                
+                // Ignorar erros de recursos bloqueados (adblocker)
+                if (event.target && event.target.src) {
+                    const src = String(event.target.src);
+                    if (src.includes('youtube') || src.includes('googlevideo') || src.includes('ytimg')) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }
+                }
+            }, true);
+            
+            // Interceptar unhandledrejection (promises rejeitadas)
+            window.addEventListener('unhandledrejection', function(event) {
+                const reason = String(event.reason || '');
+                if (errorPatterns.some(pattern => reason.includes(pattern))) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+            });
+        })();
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/images/icons/logo.svg">
+</head>
+<body data-theme="dark">
+    
+    <!-- Main Container -->
+    <div id="app" class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="currentColor"/>
+                    </svg>
+                    <span class="logo-text">SoundPulse</span>
+                </div>
+                <!-- Close button (mobile only) -->
+                <button class="btn-sidebar-close" id="btnSidebarClose" aria-label="Fechar menu">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-main">
+                    <li><a href="#/home" class="nav-link active" data-page="home">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor"/>
+                        </svg>
+                        <span>Início</span>
+                    </a></li>
+                    <li><a href="#/search" class="nav-link" data-page="search">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+                        </svg>
+                        <span>Buscar</span>
+                    </a></li>
+                    <li><a href="#/library" class="nav-link" data-page="library">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" fill="currentColor"/>
+                        </svg>
+                        <span>Sua Biblioteca</span>
+                    </a></li>
+                </ul>
+                
+                <div class="nav-divider"></div>
+                
+                <ul class="nav-secondary">
+                    <li><a href="#/browse" class="nav-link" data-page="browse">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2l-5.5 9h11z M12 22l5.5-9h-11z" fill="currentColor"/>
+                        </svg>
+                        <span>Explorar</span>
+                    </a></li>
+                    <li><a href="#/radio" class="nav-link" data-page="radio">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12c0 1.1.89 2 2 2h16c1.11 0 2-.9 2-2V8c0-1.11-.89-2-2-2H8.3l8.26-3.34L15.88 1 3.24 6.15zM7 20c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-8h-2v-2h-2v2H4V8h16v4z" fill="currentColor"/>
+                        </svg>
+                        <span>Rádio</span>
+                    </a></li>
+                    <li><a href="#/podcasts" class="nav-link" data-page="podcasts">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-12.5c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zm0 7c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                        </svg>
+                        <span>Podcasts</span>
+                    </a></li>
+                    <li><a href="#/events" class="nav-link" data-page="events">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" fill="currentColor"/>
+                        </svg>
+                        <span>Eventos</span>
+                    </a></li>
+                </ul>
+                
+                <div class="nav-divider"></div>
+                
+                <div class="playlist-section">
+                    <div class="playlist-header">
+                        <h3>Playlists</h3>
+                        <button class="btn-create-playlist" aria-label="Criar playlist">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <ul class="playlist-list" id="sidebarPlaylists">
+                        <!-- Playlists serão carregadas dinamicamente -->
+                    </ul>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#/premium" class="btn-premium">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V9h7V3.06l8 3.99v8.95h-8z" fill="currentColor"/>
+                    </svg>
+                    <span>Assinar Premium</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Main Content Area -->
+        <main id="mainContent" class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <!-- Mobile Menu Toggle -->
+                    <button class="btn-menu-toggle" id="btnMenuToggle" aria-label="Abrir menu">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    
+                    <button class="btn-nav" id="btnBack" aria-label="Voltar">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-nav" id="btnForward" aria-label="Avançar">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="top-bar-right">
+                    <button class="btn-theme-toggle" id="btnTheme" aria-label="Alternar tema">
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" fill="currentColor"/>
+                        </svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" style="display: none;">
+                            <path d="M9 2c-1.05 0-2.05.16-3 .46 4.06 1.27 7 5.06 7 9.54 0 4.48-2.94 8.27-7 9.54.95.3 1.95.46 3 .46 5.52 0 10-4.48 10-10S14.52 2 9 2z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <div class="user-menu">
+                        <button class="btn-user" id="btnUser" aria-label="Menu do usuário">
+                            <div class="user-avatar">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <span class="user-name">Usuário</span>
+                            <svg class="icon-dropdown" viewBox="0 0 24 24" fill="none">
+                                <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="#/profile">Perfil</a>
+                            <a href="#/settings">Configurações</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#/premium">Assinar Premium</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" id="btnLogout">Sair</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dynamic Content Container -->
+            <div id="viewContainer" class="view-container">
+                <!-- Views serão carregadas dinamicamente aqui -->
+            </div>
+        </main>
+        
+        <!-- Player Fixo no Rodapé -->
+        <footer id="player" class="player">
+            <!-- Audio Visualizer -->
+            <div class="visualizer-container hidden" id="visualizerContainer">
+                <canvas id="visualizerCanvas" width="400" height="80"></canvas>
+            </div>
+            
+            <div class="player-track-info">
+                <div class="track-image">
+                    <img id="playerTrackImage" src="assets/images/covers/placeholder.svg" alt="Capa da música" loading="lazy">
+                </div>
+                <div class="track-details">
+                    <div class="track-name" id="playerTrackName">Nenhuma música tocando</div>
+                    <div class="track-artist" id="playerTrackArtist">Selecione uma música</div>
+                </div>
+                <button class="btn-like" id="btnLikePlayer" aria-label="Curtir música">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="player-controls">
+                <div class="controls-buttons">
+                    <button class="btn-control" id="btnShuffle" aria-label="Aleatório">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-control" id="btnPrevious" aria-label="Anterior">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-control btn-play-pause" id="btnPlayPause" aria-label="Play/Pause">
+                        <svg class="icon-play" viewBox="0 0 24 24" fill="none">
+                            <path d="M8 5v14l11-7z" fill="currentColor"/>
+                        </svg>
+                        <svg class="icon-pause" viewBox="0 0 24 24" fill="none" style="display: none;">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-control" id="btnNext" aria-label="Próxima">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-control" id="btnRepeat" aria-label="Repetir">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="progress-bar-container">
+                    <span class="time-current" id="timeCurrentPlayer">0:00</span>
+                    <div class="progress-bar">
+                        <div class="progress-bar-bg" id="progressBarBg">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                            <div class="progress-bar-handle" id="progressBarHandle"></div>
+                        </div>
+                    </div>
+                    <span class="time-total" id="timeTotalPlayer">0:00</span>
+                </div>
+            </div>
+            
+            <div class="player-extra">
+                <button class="btn-extra" id="btnQueue" aria-label="Fila de reprodução">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <button class="btn-extra" id="btnLyrics" aria-label="Letras">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <div class="volume-control">
+                    <button class="btn-volume" id="btnVolume" aria-label="Volume">
+                        <svg class="icon-volume" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>
+                        </svg>
+                        <svg class="icon-mute" viewBox="0 0 24 24" fill="none" style="display: none;">
+                            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <div class="volume-slider">
+                        <div class="volume-bar" id="volumeBar">
+                            <div class="volume-fill" id="volumeFill"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-extra" id="btnFullscreen" aria-label="Tela cheia">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- YouTube IFrame Player (oculto) -->
+            <div id="youtubePlayer" style="display: none;"></div>
+        </footer>
+    </div>
+    
+    <!-- Fullscreen Player -->
+    <div id="fullscreenPlayer" class="fullscreen-player">
+        <div class="fullscreen-background" id="fullscreenBackground"></div>
+        <div class="fullscreen-container">
+            <button class="btn-close-fullscreen" id="btnCloseFullscreen" aria-label="Fechar tela cheia">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+            
+            <div class="fullscreen-content">
+                <div class="fullscreen-artwork-container">
+                    <img id="fullscreenArtwork" src="assets/images/covers/placeholder.svg" alt="Artwork" class="fullscreen-artwork">
+                </div>
+                
+                <div class="fullscreen-info">
+                    <div class="fullscreen-track-info">
+                        <h2 class="fullscreen-track-title" id="fullscreenTrackTitle">Nome da Música</h2>
+                        <p class="fullscreen-track-artist" id="fullscreenTrackArtist">Artista</p>
+                    </div>
+                    
+                    <div class="fullscreen-lyrics" id="fullscreenLyrics">
+                        <p class="lyrics-line">Letras aparecerão aqui...</p>
+                    </div>
+                    
+                    <div class="fullscreen-controls">
+                        <div class="fullscreen-progress">
+                            <span class="time-current" id="fullscreenTimeCurrent">0:00</span>
+                            <div class="progress-bar-large" id="fullscreenProgressBar">
+                                <div class="progress-bar-fill-large" id="fullscreenProgressFill"></div>
+                                <div class="progress-bar-handle-large" id="fullscreenProgressHandle"></div>
+                            </div>
+                            <span class="time-total" id="fullscreenTimeTotal">0:00</span>
+                        </div>
+                        
+                        <div class="fullscreen-buttons">
+                            <button class="btn-fullscreen-control" id="btnFullscreenShuffle" aria-label="Aleatório">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <button class="btn-fullscreen-control" id="btnFullscreenPrevious" aria-label="Anterior">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <button class="btn-fullscreen-control btn-fullscreen-play" id="btnFullscreenPlay" aria-label="Play/Pause">
+                                <svg class="icon-play" viewBox="0 0 24 24" fill="none">
+                                    <path d="M8 5v14l11-7z" fill="currentColor"/>
+                                </svg>
+                                <svg class="icon-pause" viewBox="0 0 24 24" fill="none" style="display: none;">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <button class="btn-fullscreen-control" id="btnFullscreenNext" aria-label="Próxima">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <button class="btn-fullscreen-control" id="btnFullscreenRepeat" aria-label="Repetir">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="modalOverlay" class="modal-overlay">
+        <!-- Modals serão criados dinamicamente -->
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- JavaScript Files -->
+    <script type="module" defer src="js/app.js"></script>
+    
+    <!-- 🚀 PERFORMANCE: Registrar Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Desregistrar Service Workers antigos primeiro
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => {
+                        registration.unregister();
+                    });
+                });
+                
+                // Aguardar um pouco e registrar o novo
+                setTimeout(() => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(reg => {
+                            console.log('✅ Service Worker ativo!');
+                            // Forçar atualização imediata
+                            reg.update();
+                        })
+                        .catch(err => console.log('ℹ️ Service Worker desabilitado (normal em desenvolvimento)'));
+                }, 100);
+            });
+        }
+        
+        // Detectar adblocker (informativo, não intrusivo)
+        setTimeout(() => {
+            if (window.fetch) {
+                fetch('https://www.youtube.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' })
+                    .catch(() => {
+                        // Silenciar completamente - adblocker não afeta funcionalidade principal
+                    });
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
+

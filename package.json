@@ -1,0 +1,52 @@
+{
+  "name": "soundpulse-web",
+  "version": "1.0.0",
+  "description": "SoundPulse - Music streaming web application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python soundpulseweb-backend/run_dev.py",
+    "build:css": "npm run build:css:bundle && npm run build:css:purge && npm run build:css:minify",
+    "build:css:bundle": "cat css/reset.css css/variables.css css/global.css css/performance.css css/components.css css/sidebar.css css/player.css css/home.css css/search.css css/library.css css/browse.css css/artist.css css/album.css css/playlist.css css/profile.css css/settings.css css/premium.css css/radio.css css/podcasts.css css/responsive.css > css/bundle.css",
+    "build:css:purge": "purgecss --config purgecss.config.js",
+    "build:css:minify": "cssnano css/bundle.purged.css css/bundle.min.css",
+    "build:js": "rollup -c rollup.config.js",
+    "build:html": "html-minifier --config-file .htmlminifierrc.json --input index.html --output dist/index.html",
+    "build:critical": "critical index.html --base . --inline --minify --extract > dist/index.critical.html",
+    "build:images": "node scripts/optimize-images.js",
+    "build": "npm run build:css && npm run build:js && npm run build:html && npm run build:critical",
+    "analyze": "npm run build:js -- --environment ANALYZE",
+    "lighthouse": "lighthouse http://localhost:5000 --view --output html --output-path ./lighthouse-report.html",
+    "serve:prod": "http-server dist -p 8080 -c-1"
+  },
+  "keywords": [
+    "music",
+    "streaming",
+    "youtube",
+    "player"
+  ],
+  "author": "SoundPulse Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-terser": "^0.4.0",
+    "autoprefixer": "^10.4.14",
+    "critical": "^6.0.0",
+    "cssnano": "^6.0.1",
+    "cssnano-cli": "^1.0.5",
+    "html-minifier": "^4.0.0",
+    "http-server": "^14.1.1",
+    "imagemin": "^8.0.1",
+    "imagemin-webp": "^8.0.0",
+    "lighthouse": "^11.0.0",
+    "postcss": "^8.4.24",
+    "postcss-cli": "^10.1.0",
+    "purgecss": "^5.0.0",
+    "rollup": "^3.25.0",
+    "rollup-plugin-analyzer": "^4.0.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-visualizer": "^5.9.0"
+  },
+  "dependencies": {}
+}
+
