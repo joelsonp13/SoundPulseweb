@@ -80,34 +80,7 @@ export function toggle(element) {
     element.classList.toggle('hidden');
 }
 
-/**
- * Debounce function
- */
-export function debounce(func, wait = 300) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-/**
- * Throttle function
- */
-export function throttle(func, limit = 100) {
-    let inThrottle;
-    return function(...args) {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
+// debounce e throttle removidos - usar funções de performance.js
 
 /**
  * Anima scroll suave
@@ -302,8 +275,6 @@ export default {
     show,
     hide,
     toggle,
-    debounce,
-    throttle,
     smoothScroll,
     createIcon,
     showToast,

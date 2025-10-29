@@ -25,6 +25,9 @@ def test_artist_endpoint(artist_id, expected_name=None):
             print(f"   🆔 browseId: {data.get('browseId', 'N/A')}")
             print(f"   🆔 channelId: {data.get('channelId', 'N/A')}")
             print(f"   🆔 id: {data.get('id', 'N/A')}")
+            print(f"   🔍 _inconsistentId: {data.get('_inconsistentId', False)}")
+            print(f"   🔍 _requestedId: {data.get('_requestedId', 'N/A')}")
+            print(f"   🔍 _returnedId: {data.get('_returnedId', 'N/A')}")
             
             if expected_name and data.get('name') != expected_name:
                 print(f"   ⚠️  INCONSISTÊNCIA: Esperado '{expected_name}', recebido '{data.get('name')}'")

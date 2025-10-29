@@ -242,7 +242,7 @@ class MusicPlayer {
                     artist: songData.artists?.[0]?.name || 'Artista Desconhecido',
                     artistName: songData.artists?.[0]?.name || 'Artista Desconhecido',
                     artistId: songData.artists?.[0]?.id,
-                    image: this.getBestThumbnail(songData.thumbnails),
+                    image: await this.getBestThumbnail(songData.thumbnails),
                     duration: duration,
                     album: songData.album?.name,
                     albumId: songData.album?.id
@@ -280,24 +280,10 @@ class MusicPlayer {
         return true;
     }
     
-    getBestThumbnail(thumbnails) {
-        if (!thumbnails || !Array.isArray(thumbnails) || thumbnails.length === 0) {
-            return 'assets/images/covers/placeholder.svg';
-        }
-        
-        // Pegar a última (melhor qualidade)
-        const index = thumbnails.length - 1;
-        const bestThumb = thumbnails[index];
-        let url = bestThumb?.url || bestThumb;
-        
-        if (!url || url === 'assets/images/covers/placeholder.svg') {
-            return 'assets/images/covers/placeholder.svg';
-        }
-        
-        // Otimizar para 250x250
-        url = url.replace(/=w\d+-h\d+/g, '=w250-h250');
-        
-        return url;
+    async getBestThumbnail(thumbnails) {
+        // Usar função centralizada do normalize.js
+        const { getThumbnail } = await import('./utils/normalize.js');
+        return getThumbnail(thumbnails, 'medium');
     }
     
     playTrack(trackId, queueTracks = []) {
@@ -780,77 +766,19 @@ class MusicPlayer {
         const fullscreenLyrics = $('#fullscreenLyrics');
         if (!fullscreenLyrics || !this.currentTrack) return;
         
-        // Import lyrics from data.js
-        import('./data.js').then(module => {
-            const lyrics = module.lyrics[this.currentTrack.id];
-            if (!lyrics) {
-                fullscreenLyrics.innerHTML = '<p class="lyrics-line">Letras não disponíveis</p>';
-                return;
-            }
-            
-            // Render lyrics lines
-            fullscreenLyrics.innerHTML = lyrics.lines.map((line, index) => 
-                `<p class="lyrics-line" data-time="${line.time}" data-index="${index}">${line.text}</p>`
-            ).join('');
-            
-            // Sync lyrics with audio time
-            if (this.audio) {
-                const updateActiveLyric = () => {
-                    const currentTime = this.audio.currentTime;
-                    const lines = fullscreenLyrics.querySelectorAll('.lyrics-line');
-                    
-                    lines.forEach(line => {
-                        const lineTime = parseFloat(line.dataset.time);
-                        const lineIndex = parseInt(line.dataset.index);
-                        const nextLine = lines[lineIndex + 1];
-                        const nextTime = nextLine ? parseFloat(nextLine.dataset.time) : Infinity;
-                        
-                        if (currentTime >= lineTime && currentTime < nextTime) {
-                            line.classList.add('active');
-                            // Auto-scroll to active line
-                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        } else {
-                            line.classList.remove('active');
-                        }
-                    });
-                };
-                
-                // Update lyrics on time update
-                this.audio.addEventListener('timeupdate', updateActiveLyric);
-            }
-        });
+        // Letras não disponíveis - funcionalidade removida
+        fullscreenLyrics.innerHTML = '<p class="lyrics-line">Letras não disponíveis</p>';
     }
     
     // ============================================
-    // TOAST NOTIFICATIONS
+    // TOAST NOTIFICATIONS - Usar função centralizada
     // ============================================
     
     showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
-        // Ícones para cada tipo
-        const icons = {
-            success: '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>',
-            error: '<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>',
-            warning: '<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>',
-            info: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>'
-        };
-        
-        toast.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                ${icons[type] || icons.info}
-            </svg>
-            <span>${message}</span>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // Remover toast após 5 segundos
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        // Usar função centralizada do dom.js
+        import('./utils/dom.js').then(module => {
+            module.showToast(message, type);
+        });
     }
 }
 

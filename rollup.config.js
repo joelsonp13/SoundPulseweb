@@ -49,7 +49,7 @@ export default [
     {
         ...baseConfig,
         input: {
-            'app.core': 'js/app-core-entry.js'
+            'app.core': 'js/app.js'
         },
         output: {
             dir: 'dist/js',

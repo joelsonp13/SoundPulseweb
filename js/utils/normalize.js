@@ -230,16 +230,7 @@ export function getThumbnail(thumbnails, size = 'medium') {
     return url;
 }
 
-/**
- * Helper: Formatar duração de segundos para MM:SS
- */
-export function formatDuration(seconds) {
-    if (!seconds || seconds === 0) return '0:00';
-    
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
+// formatDuration removido - usar função de time.js
 
 /**
  * Helper: Formatar número com separador de milhares
