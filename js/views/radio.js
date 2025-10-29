@@ -4,7 +4,8 @@
 
 import api from '../utils/api.js';
 import { normalizeTracks } from '../utils/normalize.js';
-import { showLoading, showError, showToast } from '../components/loading.js';
+import { showLoading, showError } from '../components/loading.js';
+import { showToast } from '../utils/dom.js';
 import player from '../player.js';
 import { $ } from '../utils/dom.js';
 

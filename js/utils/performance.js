@@ -56,39 +56,7 @@ export function preloadPriorityImages(imageUrls) {
     });
 }
 
-/**
- * 🚀 DEBOUNCE EXTREMO
- * Reduz chamadas excessivas em inputs e scroll + requestIdleCallback
- */
-export function debounce(func, wait = 150) {
-    let timeout;
-    return function executedFunction(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            // 🚀 Executar quando browser estiver idle (não-crítico)
-            if ('requestIdleCallback' in window) {
-                requestIdleCallback(() => func(...args));
-            } else {
-                func(...args);
-            }
-        }, wait);
-    };
-}
-
-/**
- * 🚀 THROTTLE PARA SCROLL/RESIZE
- * Limita frequência de execução de funções pesadas
- */
-export function throttle(func, limit = 100) {
-    let inThrottle;
-    return function(...args) {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
+// debounce e throttle movidos para dom.js para evitar duplicação
 
 /**
  * 🚀 LIMPAR CACHE ANTIGO
@@ -152,8 +120,6 @@ export async function parallelRequests(requests, limit = 4) {
 export default {
     enableLazyLoading,
     preloadPriorityImages,
-    debounce,
-    throttle,
     cleanupCache,
     rafThrottle,
     parallelRequests

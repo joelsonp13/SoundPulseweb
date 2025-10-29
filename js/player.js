@@ -5,7 +5,7 @@
 import { formatTime } from './utils/time.js';
 import * as Storage from './storage.js';
 import { $ } from './utils/dom.js';
-import AudioVisualizer from './visualizer.js';
+// Visualizer desabilitado
 import YouTubePlayer from './youtube-player.js';
 
 // Performance helper: throttle using RequestAnimationFrame
@@ -780,45 +780,8 @@ class MusicPlayer {
         const fullscreenLyrics = $('#fullscreenLyrics');
         if (!fullscreenLyrics || !this.currentTrack) return;
         
-        // Import lyrics from data.js
-        import('./data.js').then(module => {
-            const lyrics = module.lyrics[this.currentTrack.id];
-            if (!lyrics) {
-                fullscreenLyrics.innerHTML = '<p class="lyrics-line">Letras não disponíveis</p>';
-                return;
-            }
-            
-            // Render lyrics lines
-            fullscreenLyrics.innerHTML = lyrics.lines.map((line, index) => 
-                `<p class="lyrics-line" data-time="${line.time}" data-index="${index}">${line.text}</p>`
-            ).join('');
-            
-            // Sync lyrics with audio time
-            if (this.audio) {
-                const updateActiveLyric = () => {
-                    const currentTime = this.audio.currentTime;
-                    const lines = fullscreenLyrics.querySelectorAll('.lyrics-line');
-                    
-                    lines.forEach(line => {
-                        const lineTime = parseFloat(line.dataset.time);
-                        const lineIndex = parseInt(line.dataset.index);
-                        const nextLine = lines[lineIndex + 1];
-                        const nextTime = nextLine ? parseFloat(nextLine.dataset.time) : Infinity;
-                        
-                        if (currentTime >= lineTime && currentTime < nextTime) {
-                            line.classList.add('active');
-                            // Auto-scroll to active line
-                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        } else {
-                            line.classList.remove('active');
-                        }
-                    });
-                };
-                
-                // Update lyrics on time update
-                this.audio.addEventListener('timeupdate', updateActiveLyric);
-            }
-        });
+        // Lyrics não disponíveis (data.js removido)
+        fullscreenLyrics.innerHTML = '<p class="lyrics-line">Letras não disponíveis</p>';
     }
     
     // ============================================

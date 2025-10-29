@@ -97,31 +97,7 @@ export function showBackendOffline(container) {
     );
 }
 
-/**
- * Criar toast notification
- */
-export function showToast(message, type = 'info') {
-    // Remove toast anterior se existir
-    const existingToast = document.querySelector('.toast-notification');
-    if (existingToast) {
-        existingToast.remove();
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast-notification toast-${type}`;
-    toast.textContent = message;
-
-    document.body.appendChild(toast);
-
-    // Animar entrada
-    setTimeout(() => toast.classList.add('show'), 10);
-
-    // Remover após 3 segundos
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
+// showToast movido para dom.js para evitar duplicação
 
 /**
  * Adicionar estilos de loading ao documento
