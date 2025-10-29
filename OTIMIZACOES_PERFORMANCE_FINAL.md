@@ -224,3 +224,4 @@ O sistema de busca agora oferece:
 - Reduz carga no servidor
 
 **SISTEMA OTIMIZADO PARA MÁXIMA PERFORMANCE! 🔥⚡🚀**
+

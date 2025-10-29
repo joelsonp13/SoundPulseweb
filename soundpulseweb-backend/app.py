@@ -281,13 +281,13 @@ def get_lyrics(browse_id):
 
 @app.route('/api/artist/<browse_id>', methods=['GET'])
 @handle_errors
-# @timed_cache(seconds=1800)  # 🔧 TEMPORARIAMENTE DESABILITADO PARA DEBUG
+@timed_cache(seconds=600)  # Cache reduzido para 10 minutos
 def get_artist(browse_id):
     """
     Obter perfil completo de artista
     RETORNA: Perfil + TOP MÚSICAS POPULARES do artista
     """
-    global yt  # Declarar global no início da função
+    global yt
     
     print(f"[DEBUG] get_artist chamado com browse_id: {browse_id}")
     
@@ -296,45 +296,83 @@ def get_artist(browse_id):
         return jsonify({"error": "YTMusic não disponível"}), 500
     
     try:
-        print(f"[DEBUG] Iniciando busca do artista {browse_id}")
+        # 🔧 CORREÇÃO: Validar formato do ID antes de buscar
+        if not browse_id or not isinstance(browse_id, str):
+            print(f"[ERROR] ID inválido: {browse_id}")
+            return jsonify({"error": "ID de artista inválido"}), 400
         
-        # 🔧 SOLUÇÃO DEFINITIVA: Reinicializar YTMusic a cada requisição para evitar estado corrompido
-        print(f"[DEBUG] Reinicializando YTMusic para evitar estado corrompido...")
-        yt = init_ytmusic()
+        # 🔧 CORREÇÃO: Normalizar ID (remover prefixos desnecessários)
+        normalized_id = browse_id
+        if browse_id.startswith('UC') and len(browse_id) == 24:
+            # É um channelId válido, usar diretamente
+            pass
+        elif browse_id.startswith('MPRE'):
+            # É um browseId, usar diretamente
+            pass
+        else:
+            print(f"[WARNING] Formato de ID não reconhecido: {browse_id}")
         
-        if not yt:
-            print("[ERROR] Falha ao reinicializar YTMusic")
-            return jsonify({"error": "YTMusic não disponível"}), 500
+        print(f"[DEBUG] Buscando artista com ID normalizado: {normalized_id}")
         
-        # Tentar buscar artista com instância limpa
-        try:
-            artist = yt.get_artist(browse_id)
-            print(f"[DEBUG] Resposta do yt.get_artist: {artist.get('name', 'N/A')} - {artist.get('channelId', 'N/A')}")
+        # 🔧 CORREÇÃO: Buscar artista sem reinicialização desnecessária
+        artist = yt.get_artist(normalized_id)
+        
+        if not artist:
+            print(f"[ERROR] Artista não encontrado: {normalized_id}")
+            return jsonify({"error": "Artista não encontrado"}), 404
+        
+        print(f"[DEBUG] Artista encontrado: {artist.get('name', 'N/A')}")
+        
+        # 🔧 CORREÇÃO: Mapeamento correto de IDs
+        browse_id_returned = artist.get('browseId')
+        channel_id = artist.get('channelId')
+        artist_id = artist.get('id')
+        
+        # Priorizar channelId como identificador principal
+        primary_id = channel_id or browse_id_returned or artist_id
+        
+        # 🔧 CORREÇÃO: Validação de consistência melhorada
+        if primary_id and primary_id != normalized_id:
+            print(f"[WARNING] ID inconsistente detectado:")
+            print(f"[WARNING]   Solicitado: {normalized_id}")
+            print(f"[WARNING]   Retornado: {primary_id}")
+            print(f"[WARNING]   Nome: {artist.get('name', 'N/A')}")
             
-            # Verificar se o artista retornado corresponde ao ID solicitado
-            returned_id = artist.get('browseId') or artist.get('id') or artist.get('channelId')
-            
-            # Se o ID retornado é diferente do solicitado, adicionar flag de inconsistência
-            if returned_id and returned_id != browse_id:
-                print(f"[WARNING] INCONSISTÊNCIA DE ID DETECTADA!")
-                print(f"[WARNING] Solicitado: {browse_id}")
-                print(f"[WARNING] Retornado: {returned_id}")
-                print(f"[WARNING] Nome: {artist.get('name', 'N/A')}")
-                
-                # Adicionar flag de inconsistência
+            # 🔧 CORREÇÃO: Tentar buscar com o ID retornado para verificar se é o mesmo artista
+            try:
+                verification_artist = yt.get_artist(primary_id)
+                if verification_artist and verification_artist.get('name') == artist.get('name'):
+                    print(f"[INFO] Verificação: Mesmo artista, usando ID retornado")
+                    artist = verification_artist
+                    primary_id = verification_artist.get('channelId') or verification_artist.get('browseId') or verification_artist.get('id')
+                else:
+                    print(f"[WARNING] Verificação falhou, mantendo dados originais")
+                    artist['_inconsistentId'] = True
+                    artist['_requestedId'] = normalized_id
+                    artist['_returnedId'] = primary_id
+            except Exception as e:
+                print(f"[WARNING] Erro na verificação: {e}")
                 artist['_inconsistentId'] = True
-                artist['_requestedId'] = browse_id
-                artist['_returnedId'] = returned_id
-            else:
-                print(f"[SUCCESS] ID consistente")
-            
-            return jsonify(artist)
-            
-        except Exception as e:
-            print(f"[ERROR] Erro na busca do artista: {e}")
-            import traceback
-            traceback.print_exc()
-            raise e
+                artist['_requestedId'] = normalized_id
+                artist['_returnedId'] = primary_id
+        else:
+            print(f"[SUCCESS] ID consistente: {primary_id}")
+        
+        # 🔧 CORREÇÃO: Garantir que os IDs estão corretamente mapeados
+        artist['browseId'] = primary_id
+        artist['channelId'] = channel_id or primary_id
+        artist['id'] = primary_id
+        
+        # Adicionar metadados de debug
+        artist['_debug'] = {
+            'requestedId': normalized_id,
+            'returnedBrowseId': browse_id_returned,
+            'returnedChannelId': channel_id,
+            'returnedId': artist_id,
+            'primaryId': primary_id
+        }
+        
+        return jsonify(artist)
             
     except Exception as e:
         print(f"[ERROR] Erro ao buscar artista {browse_id}: {e}")
