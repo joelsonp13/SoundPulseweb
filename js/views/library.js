@@ -2,14 +2,14 @@
    LIBRARY VIEW
    ==================================== */
 
-import { tracks, albums, artists } from '../data.js';
 import * as Storage from '../storage.js';
 import player from '../player.js';
 import { $, createElement } from '../utils/dom.js';
+import { api } from '../utils/api.js';
 
 let currentTab = 'tracks';
 
-export function initLibraryView() {
+export async function initLibraryView() {
     const container = $('#viewContainer');
     if (!container) return;
     
@@ -31,42 +31,41 @@ export function initLibraryView() {
     `;
     
     setupTabHandlers();
-    renderContent();
+    await renderContent();
 }
 
 function setupTabHandlers() {
     const tabs = document.querySelectorAll('.library-tab');
     tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', async () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentTab = tab.dataset.tab;
-            renderContent();
+            await renderContent();
         });
     });
 }
 
-function renderContent() {
+async function renderContent() {
     const container = $('#libraryContent');
     if (!container) return;
     
     if (currentTab === 'tracks') {
-        renderLikedTracks();
+        await renderLikedTracks();
     } else if (currentTab === 'albums') {
-        renderLikedAlbums();
+        await renderLikedAlbums();
     } else if (currentTab === 'artists') {
-        renderFollowedArtists();
+        await renderFollowedArtists();
     } else if (currentTab === 'playlists') {
         renderUserPlaylists();
     }
 }
 
-function renderLikedTracks() {
+async function renderLikedTracks() {
     const container = $('#libraryContent');
     const likedIds = Storage.getLikedTracks();
-    const likedTracks = likedIds.map(id => tracks.find(t => t.id === id)).filter(Boolean);
     
-    if (likedTracks.length === 0) {
+    if (likedIds.length === 0) {
         container.innerHTML = `
             <div class="library-empty">
                 <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -79,33 +78,79 @@ function renderLikedTracks() {
         return;
     }
     
+    // Mostrar loading
     container.innerHTML = `
-        <div class="liked-songs-banner">
-            <div class="liked-songs-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" fill="white"/>
-                </svg>
-            </div>
-            <div class="liked-songs-info">
-                <h2 class="liked-songs-title">Músicas Curtidas</h2>
-                <p class="liked-songs-count">${likedTracks.length} ${likedTracks.length === 1 ? 'música' : 'músicas'}</p>
-            </div>
+        <div class="library-loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando músicas curtidas...</p>
         </div>
-        <div class="track-list" id="likedTracksList"></div>
     `;
     
-    const list = $('#likedTracksList');
-    likedTracks.forEach((track, index) => {
-        list.appendChild(createTrackItem(track, index + 1, likedTracks.map(t => t.id)));
-    });
+    try {
+        // Buscar dados das músicas curtidas via API
+        const likedTracks = [];
+        for (const id of likedIds) {
+            try {
+                const track = await api.getTrack(id);
+                if (track) {
+                    likedTracks.push(track);
+                }
+            } catch (error) {
+                console.warn(`Erro ao carregar track ${id}:`, error);
+            }
+        }
+        
+        if (likedTracks.length === 0) {
+            container.innerHTML = `
+                <div class="library-empty">
+                    <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z"/>
+                    </svg>
+                    <h3 class="library-empty-title">Nenhuma música curtida</h3>
+                    <p class="library-empty-subtitle">Curta músicas para vê-las aqui</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="liked-songs-banner">
+                <div class="liked-songs-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" fill="white"/>
+                    </svg>
+                </div>
+                <div class="liked-songs-info">
+                    <h2 class="liked-songs-title">Músicas Curtidas</h2>
+                    <p class="liked-songs-count">${likedTracks.length} ${likedTracks.length === 1 ? 'música' : 'músicas'}</p>
+                </div>
+            </div>
+            <div class="track-list" id="likedTracksList"></div>
+        `;
+        
+        const list = $('#likedTracksList');
+        likedTracks.forEach((track, index) => {
+            list.appendChild(createTrackItem(track, index + 1, likedTracks.map(t => t.id)));
+        });
+    } catch (error) {
+        console.error('Erro ao carregar músicas curtidas:', error);
+        container.innerHTML = `
+            <div class="library-empty">
+                <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <h3 class="library-empty-title">Erro ao carregar músicas</h3>
+                <p class="library-empty-subtitle">Tente novamente mais tarde</p>
+            </div>
+        `;
+    }
 }
 
-function renderLikedAlbums() {
+async function renderLikedAlbums() {
     const container = $('#libraryContent');
     const likedIds = Storage.getLikedAlbums();
-    const likedAlbums = likedIds.map(id => albums.find(a => a.id === id)).filter(Boolean);
     
-    if (likedAlbums.length === 0) {
+    if (likedIds.length === 0) {
         container.innerHTML = `
             <div class="library-empty">
                 <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -118,33 +163,79 @@ function renderLikedAlbums() {
         return;
     }
     
-    container.innerHTML = '<div class="library-grid" id="albumsGrid"></div>';
-    const grid = $('#albumsGrid');
+    // Mostrar loading
+    container.innerHTML = `
+        <div class="library-loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando álbuns salvos...</p>
+        </div>
+    `;
     
-    likedAlbums.forEach(album => {
-        const card = createElement('div', ['music-card']);
-        card.innerHTML = `
-            <div class="music-card-image">
-                <img src="${album.image}" alt="${album.title}">
-            </div>
-            <div class="music-card-content">
-                <div class="music-card-title">${album.title}</div>
-                <div class="music-card-subtitle">${album.artistName} • ${album.year}</div>
+    try {
+        // Buscar dados dos álbuns salvos via API
+        const likedAlbums = [];
+        for (const id of likedIds) {
+            try {
+                const album = await api.getAlbum(id);
+                if (album) {
+                    likedAlbums.push(album);
+                }
+            } catch (error) {
+                console.warn(`Erro ao carregar álbum ${id}:`, error);
+            }
+        }
+        
+        if (likedAlbums.length === 0) {
+            container.innerHTML = `
+                <div class="library-empty">
+                    <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <h3 class="library-empty-title">Nenhum álbum salvo</h3>
+                    <p class="library-empty-subtitle">Salve álbuns para vê-los aqui</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '<div class="library-grid" id="albumsGrid"></div>';
+        const grid = $('#albumsGrid');
+        
+        likedAlbums.forEach(album => {
+            const card = createElement('div', ['music-card']);
+            card.innerHTML = `
+                <div class="music-card-image">
+                    <img src="${album.image}" alt="${album.title}">
+                </div>
+                <div class="music-card-content">
+                    <div class="music-card-title">${album.title}</div>
+                    <div class="music-card-subtitle">${album.artistName} • ${album.year}</div>
+                </div>
+            `;
+            card.addEventListener('click', () => {
+                window.location.hash = `#/album/${album.id}`;
+            });
+            grid.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar álbuns salvos:', error);
+        container.innerHTML = `
+            <div class="library-empty">
+                <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <h3 class="library-empty-title">Erro ao carregar álbuns</h3>
+                <p class="library-empty-subtitle">Tente novamente mais tarde</p>
             </div>
         `;
-        card.addEventListener('click', () => {
-            window.location.hash = `#/album/${album.id}`;
-        });
-        grid.appendChild(card);
-    });
+    }
 }
 
-function renderFollowedArtists() {
+async function renderFollowedArtists() {
     const container = $('#libraryContent');
     const followedIds = Storage.getFollowedArtists();
-    const followedArtists = followedIds.map(id => artists.find(a => a.id === id)).filter(Boolean);
     
-    if (followedArtists.length === 0) {
+    if (followedIds.length === 0) {
         container.innerHTML = `
             <div class="library-empty">
                 <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -157,25 +248,72 @@ function renderFollowedArtists() {
         return;
     }
     
-    container.innerHTML = '<div class="library-grid" id="artistsGrid"></div>';
-    const grid = $('#artistsGrid');
+    // Mostrar loading
+    container.innerHTML = `
+        <div class="library-loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando artistas seguidos...</p>
+        </div>
+    `;
     
-    followedArtists.forEach(artist => {
-        const card = createElement('div', ['music-card', 'round']);
-        card.innerHTML = `
-            <div class="music-card-image">
-                <img src="${artist.image}" alt="${artist.name}">
-            </div>
-            <div class="music-card-content">
-                <div class="music-card-title">${artist.name}</div>
-                <div class="music-card-subtitle">Artista</div>
+    try {
+        // Buscar dados dos artistas seguidos via API
+        const followedArtists = [];
+        for (const id of followedIds) {
+            try {
+                const artist = await api.getArtist(id);
+                if (artist) {
+                    followedArtists.push(artist);
+                }
+            } catch (error) {
+                console.warn(`Erro ao carregar artista ${id}:`, error);
+            }
+        }
+        
+        if (followedArtists.length === 0) {
+            container.innerHTML = `
+                <div class="library-empty">
+                    <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    <h3 class="library-empty-title">Nenhum artista seguido</h3>
+                    <p class="library-empty-subtitle">Siga artistas para vê-los aqui</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '<div class="library-grid" id="artistsGrid"></div>';
+        const grid = $('#artistsGrid');
+        
+        followedArtists.forEach(artist => {
+            const card = createElement('div', ['music-card', 'round']);
+            card.innerHTML = `
+                <div class="music-card-image">
+                    <img src="${artist.image}" alt="${artist.name}">
+                </div>
+                <div class="music-card-content">
+                    <div class="music-card-title">${artist.name}</div>
+                    <div class="music-card-subtitle">Artista</div>
+                </div>
+            `;
+            card.addEventListener('click', () => {
+                window.location.hash = `#/artist/${artist.id}`;
+            });
+            grid.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar artistas seguidos:', error);
+        container.innerHTML = `
+            <div class="library-empty">
+                <svg class="library-empty-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                <h3 class="library-empty-title">Erro ao carregar artistas</h3>
+                <p class="library-empty-subtitle">Tente novamente mais tarde</p>
             </div>
         `;
-        card.addEventListener('click', () => {
-            window.location.hash = `#/artist/${artist.id}`;
-        });
-        grid.appendChild(card);
-    });
+    }
 }
 
 function renderUserPlaylists() {

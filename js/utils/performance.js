@@ -56,54 +56,7 @@ export function preloadPriorityImages(imageUrls) {
     });
 }
 
-/**
- * 🚀 DEBOUNCE EXTREMO
- * Reduz chamadas excessivas em inputs e scroll + requestIdleCallback
- */
-export function debounce(func, wait = 150) {
-    let timeout;
-    return function executedFunction(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            // 🚀 Executar quando browser estiver idle (não-crítico)
-            if ('requestIdleCallback' in window) {
-                requestIdleCallback(() => func(...args));
-            } else {
-                func(...args);
-            }
-        }, wait);
-    };
-}
 
-/**
- * 🚀 THROTTLE PARA SCROLL/RESIZE
- * Limita frequência de execução de funções pesadas
- */
-export function throttle(func, limit = 100) {
-    let inThrottle;
-    return function(...args) {
-        if (!inThrottle) {
-            func.apply(this, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-/**
- * 🚀 LIMPAR CACHE ANTIGO
- * Remove cache expirado para liberar memória
- */
-export function cleanupCache(cacheMap, duration) {
-    if (!(cacheMap instanceof Map)) return;
-    
-    const now = Date.now();
-    for (const [key, value] of cacheMap.entries()) {
-        if (value.timestamp && now - value.timestamp > duration) {
-            cacheMap.delete(key);
-        }
-    }
-}
 
 /**
  * 🚀 REQUEST ANIMATION FRAME HELPER
@@ -152,9 +105,6 @@ export async function parallelRequests(requests, limit = 4) {
 export default {
     enableLazyLoading,
     preloadPriorityImages,
-    debounce,
-    throttle,
-    cleanupCache,
     rafThrottle,
     parallelRequests
 };

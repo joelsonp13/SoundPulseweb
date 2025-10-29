@@ -23,6 +23,7 @@ $cssFiles = @(
     "css/premium.css",
     "css/radio.css",
     "css/podcasts.css",
+    "css/performance-dashboard.css",
     "css/responsive.css"
 )
 

@@ -281,14 +281,12 @@ def get_lyrics(browse_id):
 
 @app.route('/api/artist/<browse_id>', methods=['GET'])
 @handle_errors
-# @timed_cache(seconds=1800)  # 🔧 TEMPORARIAMENTE DESABILITADO PARA DEBUG
+@timed_cache(seconds=1800)  # Cache de 30 minutos para melhor performance
 def get_artist(browse_id):
     """
     Obter perfil completo de artista
     RETORNA: Perfil + TOP MÚSICAS POPULARES do artista
     """
-    global yt  # Declarar global no início da função
-    
     print(f"[DEBUG] get_artist chamado com browse_id: {browse_id}")
     
     if not yt:
@@ -298,43 +296,28 @@ def get_artist(browse_id):
     try:
         print(f"[DEBUG] Iniciando busca do artista {browse_id}")
         
-        # 🔧 SOLUÇÃO DEFINITIVA: Reinicializar YTMusic a cada requisição para evitar estado corrompido
-        print(f"[DEBUG] Reinicializando YTMusic para evitar estado corrompido...")
-        yt = init_ytmusic()
+        # Buscar artista com instância existente (sem reinicializar)
+        artist = yt.get_artist(browse_id)
+        print(f"[DEBUG] Resposta do yt.get_artist: {artist.get('name', 'N/A')} - {artist.get('channelId', 'N/A')}")
         
-        if not yt:
-            print("[ERROR] Falha ao reinicializar YTMusic")
-            return jsonify({"error": "YTMusic não disponível"}), 500
+        # Verificar se o artista retornado corresponde ao ID solicitado
+        returned_id = artist.get('browseId') or artist.get('id') or artist.get('channelId')
         
-        # Tentar buscar artista com instância limpa
-        try:
-            artist = yt.get_artist(browse_id)
-            print(f"[DEBUG] Resposta do yt.get_artist: {artist.get('name', 'N/A')} - {artist.get('channelId', 'N/A')}")
+        # Se o ID retornado é diferente do solicitado, adicionar flag de inconsistência
+        if returned_id and returned_id != browse_id:
+            print(f"[WARNING] INCONSISTÊNCIA DE ID DETECTADA!")
+            print(f"[WARNING] Solicitado: {browse_id}")
+            print(f"[WARNING] Retornado: {returned_id}")
+            print(f"[WARNING] Nome: {artist.get('name', 'N/A')}")
             
-            # Verificar se o artista retornado corresponde ao ID solicitado
-            returned_id = artist.get('browseId') or artist.get('id') or artist.get('channelId')
-            
-            # Se o ID retornado é diferente do solicitado, adicionar flag de inconsistência
-            if returned_id and returned_id != browse_id:
-                print(f"[WARNING] INCONSISTÊNCIA DE ID DETECTADA!")
-                print(f"[WARNING] Solicitado: {browse_id}")
-                print(f"[WARNING] Retornado: {returned_id}")
-                print(f"[WARNING] Nome: {artist.get('name', 'N/A')}")
-                
-                # Adicionar flag de inconsistência
-                artist['_inconsistentId'] = True
-                artist['_requestedId'] = browse_id
-                artist['_returnedId'] = returned_id
-            else:
-                print(f"[SUCCESS] ID consistente")
-            
-            return jsonify(artist)
-            
-        except Exception as e:
-            print(f"[ERROR] Erro na busca do artista: {e}")
-            import traceback
-            traceback.print_exc()
-            raise e
+            # Adicionar flag de inconsistência
+            artist['_inconsistentId'] = True
+            artist['_requestedId'] = browse_id
+            artist['_returnedId'] = returned_id
+        else:
+            print(f"[SUCCESS] ID consistente")
+        
+        return jsonify(artist)
             
     except Exception as e:
         print(f"[ERROR] Erro ao buscar artista {browse_id}: {e}")

@@ -45,11 +45,11 @@ const baseConfig = {
 };
 
 export default [
-    // Bundle 1: Core (Router, Storage, Utils)
+    // Bundle 1: Main App
     {
         ...baseConfig,
         input: {
-            'app.core': 'js/app-core-entry.js'
+            'app': 'js/app.js'
         },
         output: {
             dir: 'dist/js',
