@@ -374,7 +374,7 @@ class MusicPlayer {
     
     previous() {
         // If more than 3 seconds played, restart current track
-        if (this.audio && this.audio.currentTime > 3) {
+        if (this.ytPlayer && this.ytPlayer.isReady && this.ytPlayer.getCurrentTime() > 3) {
             this.seek(0);
             return;
         }
@@ -397,9 +397,7 @@ class MusicPlayer {
     }
     
     seek(time) {
-        if (this.usingFallback) {
-            this.fallbackAudio.currentTime = Math.max(0, Math.min(time, this.fallbackAudio.duration || 0));
-        } else if (this.ytPlayer && this.ytPlayer.isReady) {
+        if (this.ytPlayer && this.ytPlayer.isReady) {
             const duration = this.ytPlayer.getDuration();
             const seekTime = Math.max(0, Math.min(time, duration));
             this.ytPlayer.seekTo(seekTime);
@@ -780,45 +778,8 @@ class MusicPlayer {
         const fullscreenLyrics = $('#fullscreenLyrics');
         if (!fullscreenLyrics || !this.currentTrack) return;
         
-        // Import lyrics from data.js
-        import('./data.js').then(module => {
-            const lyrics = module.lyrics[this.currentTrack.id];
-            if (!lyrics) {
-                fullscreenLyrics.innerHTML = '<p class="lyrics-line">Letras não disponíveis</p>';
-                return;
-            }
-            
-            // Render lyrics lines
-            fullscreenLyrics.innerHTML = lyrics.lines.map((line, index) => 
-                `<p class="lyrics-line" data-time="${line.time}" data-index="${index}">${line.text}</p>`
-            ).join('');
-            
-            // Sync lyrics with audio time
-            if (this.audio) {
-                const updateActiveLyric = () => {
-                    const currentTime = this.audio.currentTime;
-                    const lines = fullscreenLyrics.querySelectorAll('.lyrics-line');
-                    
-                    lines.forEach(line => {
-                        const lineTime = parseFloat(line.dataset.time);
-                        const lineIndex = parseInt(line.dataset.index);
-                        const nextLine = lines[lineIndex + 1];
-                        const nextTime = nextLine ? parseFloat(nextLine.dataset.time) : Infinity;
-                        
-                        if (currentTime >= lineTime && currentTime < nextTime) {
-                            line.classList.add('active');
-                            // Auto-scroll to active line
-                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        } else {
-                            line.classList.remove('active');
-                        }
-                    });
-                };
-                
-                // Update lyrics on time update
-                this.audio.addEventListener('timeupdate', updateActiveLyric);
-            }
-        });
+        // Lyrics not available - data.js was removed
+        fullscreenLyrics.innerHTML = '<p class="lyrics-line">Letras não disponíveis</p>';
     }
     
     // ============================================

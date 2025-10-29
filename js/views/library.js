@@ -2,7 +2,6 @@
    LIBRARY VIEW
    ==================================== */
 
-import { tracks, albums, artists } from '../data.js';
 import * as Storage from '../storage.js';
 import player from '../player.js';
 import { $, createElement } from '../utils/dom.js';
@@ -64,7 +63,8 @@ function renderContent() {
 function renderLikedTracks() {
     const container = $('#libraryContent');
     const likedIds = Storage.getLikedTracks();
-    const likedTracks = likedIds.map(id => tracks.find(t => t.id === id)).filter(Boolean);
+    // Mock data removed - using real data from backend
+    const likedTracks = [];
     
     if (likedTracks.length === 0) {
         container.innerHTML = `
@@ -103,7 +103,8 @@ function renderLikedTracks() {
 function renderLikedAlbums() {
     const container = $('#libraryContent');
     const likedIds = Storage.getLikedAlbums();
-    const likedAlbums = likedIds.map(id => albums.find(a => a.id === id)).filter(Boolean);
+    // Mock data removed - using real data from backend
+    const likedAlbums = [];
     
     if (likedAlbums.length === 0) {
         container.innerHTML = `
@@ -142,7 +143,8 @@ function renderLikedAlbums() {
 function renderFollowedArtists() {
     const container = $('#libraryContent');
     const followedIds = Storage.getFollowedArtists();
-    const followedArtists = followedIds.map(id => artists.find(a => a.id === id)).filter(Boolean);
+    // Mock data removed - using real data from backend
+    const followedArtists = [];
     
     if (followedArtists.length === 0) {
         container.innerHTML = `

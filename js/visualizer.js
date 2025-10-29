@@ -148,12 +148,12 @@ class AudioVisualizer {
             this.analyser.fftSize = this.isMobile ? 64 : 128; // Smaller FFT for mobile
             this.analyser.smoothingTimeConstant = this.isMobile ? 0.85 : 0.8;
             
-            // Connect audio element
-            if (!this.source) {
-                this.source = this.audioContext.createMediaElementSource(this.player.audio);
-                this.source.connect(this.analyser);
-                this.analyser.connect(this.audioContext.destination);
-            }
+            // Note: Visualizer disabled for YouTube Player
+            // YouTube IFrame API doesn't provide direct audio access
+            // This would require Web Audio API integration with YouTube
+            console.log('⚠️ Visualizer disabled - YouTube Player doesn\'t support direct audio access');
+            this.isSetup = true;
+            return;
             
             // Create data array
             const bufferLength = this.analyser.frequencyBinCount;
