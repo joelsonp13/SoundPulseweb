@@ -108,3 +108,7 @@ dmypy.json
 # Temporary files
 *.tmp
 *.temp
+
+# OAuth tokens and sensitive data
+soundpulseweb-backend/oauth.json
+oauth.json
