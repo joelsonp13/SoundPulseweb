@@ -2,7 +2,30 @@
    API UTILITIES - Backend Integration
    ==================================== */
 
-const API_BASE_URL = 'http://127.0.0.1:5000';
+function resolveApiBase() {
+    try {
+        // 1) Override via localStorage (persistente)
+        const ls = typeof localStorage !== 'undefined' ? localStorage.getItem('API_BASE_URL') : null;
+        if (ls && typeof ls === 'string' && ls.trim()) {
+            return ls.replace(/\/$/, '');
+        }
+        // 2) Meta tag no index.html
+        const meta = typeof document !== 'undefined' ? document.querySelector('meta[name="sp-api-base"]')?.content : '';
+        if (meta && meta.trim()) {
+            return meta.replace(/\/$/, '');
+        }
+        // 3) Variável global injetável
+        if (typeof window !== 'undefined' && window.__SP_API_BASE__) {
+            return String(window.__SP_API_BASE__).replace(/\/$/, '');
+        }
+        // 4) Fallback dev
+        return 'http://127.0.0.1:5000';
+    } catch (e) {
+        return 'http://127.0.0.1:5000';
+    }
+}
+
+const API_BASE_URL = resolveApiBase();
 
 // 🚀 CACHE AGRESSIVO: 15 minutos para performance máxima
 const cache = new Map();
