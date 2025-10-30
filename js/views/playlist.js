@@ -38,15 +38,15 @@ function renderPlaylist(container, playlistData) {
         <div class="playlist-view">
             <div class="playlist-header">
                 <div class="playlist-cover">
-                    <img src="${playlist.image}" alt="${playlist.title}">
+                    <img src="${playlist.image}" alt="${playlist.title}" loading="eager">
                 </div>
                 <div class="playlist-info">
                     <span class="playlist-type">Playlist</span>
                     <h1 class="playlist-title">${playlist.title}</h1>
                     ${playlist.description ? `<p class="playlist-description">${playlist.description}</p>` : ''}
                     <div class="playlist-meta">
-                        <span>${playlist.author}</span>
-                        <span>• ${tracks.length} músicas</span>
+                        ${playlist.author ? `<span>${playlist.author}</span>` : ''}
+                        ${tracks.length > 0 ? `<span>${playlist.author ? '• ' : ''}${tracks.length} músicas</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -72,10 +72,20 @@ function renderTracks(tracks) {
     const tracksContainer = $('#playlistTracks');
     if (!tracksContainer) return;
     
+    if (tracks.length === 0) {
+        tracksContainer.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center; padding: var(--spacing-2xl);">Nenhuma música nesta playlist</p>';
+        return;
+    }
+    
     tracksContainer.innerHTML = tracks.map((track, index) => `
         <div class="track-item" data-video-id="${track.videoId}">
-            <span class="track-number">${index + 1}</span>
-            <div class="track-cover">
+            <span class="track-number">
+                <span class="number">${index + 1}</span>
+                <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </span>
+            <div class="track-image">
                 <img src="${track.image}" alt="${track.title}" loading="lazy">
             </div>
             <div class="track-info">
@@ -83,8 +93,8 @@ function renderTracks(tracks) {
                 <div class="track-artist">${track.artist}</div>
             </div>
             <span class="track-duration">${formatDuration(track.duration)}</span>
-            <button class="btn-icon track-play">
-                <svg viewBox="0 0 24 24" fill="currentColor">
+            <button class="btn-icon track-play" aria-label="Tocar ${track.title}">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                     <path d="M8 5v14l11-7z"/>
                 </svg>
             </button>
@@ -94,8 +104,10 @@ function renderTracks(tracks) {
     tracksContainer.querySelectorAll('.track-item').forEach(item => {
         item.addEventListener('click', () => {
             const videoId = item.dataset.videoId;
-            player.loadTrack(videoId);
-            player.play();
+            if (videoId) {
+                player.loadTrack(videoId);
+                player.play();
+            }
         });
     });
 }

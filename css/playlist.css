@@ -6,6 +6,76 @@
     animation: fadeIn var(--animation-duration-base) var(--ease-in-out);
 }
 
+.playlist-header {
+    display: flex;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.playlist-cover {
+    flex-shrink: 0;
+    width: 232px;
+    height: 232px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-large);
+}
+
+.playlist-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.playlist-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.playlist-type {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--spacing-sm);
+}
+
+.playlist-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playlist-description {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--spacing-lg);
+    max-width: 600px;
+}
+
+.playlist-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    flex-wrap: wrap;
+}
+
+.playlist-meta span {
+    display: inline-flex;
+    align-items: center;
+}
+
 .playlist-actions {
     display: flex;
     align-items: center;
@@ -77,5 +147,23 @@
 .btn-add-songs:hover {
     border-color: var(--color-text-primary);
     transform: scale(1.02);
+}
+
+.playlist-tracks {
+    width: 100%;
+}
+
+.playlist-tracks .track-item {
+    border-radius: var(--border-radius-sm);
+}
+
+.playlist-tracks .track-item:first-child {
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+}
+
+.playlist-tracks .track-item:last-child {
+    border-bottom-left-radius: var(--border-radius-md);
+    border-bottom-right-radius: var(--border-radius-md);
 }
 

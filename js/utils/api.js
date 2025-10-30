@@ -9,23 +9,49 @@ function resolveApiBase() {
         if (ls && typeof ls === 'string' && ls.trim()) {
             return ls.replace(/\/$/, '');
         }
-        // 2) Meta tag no index.html
+        
+        // 2) DETECTAR SE ESTÁ RODANDO LOCALMENTE
+        // Se hostname é localhost, 127.0.0.1 ou IP local, usar backend local
+        const isLocal = typeof window !== 'undefined' && (
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === '0.0.0.0' ||
+            window.location.hostname.startsWith('192.168.') ||
+            window.location.hostname.startsWith('10.') ||
+            window.location.hostname.startsWith('172.')
+        );
+        
+        if (isLocal) {
+            return 'http://localhost:5000';
+        }
+        
+        // 3) Meta tag no index.html (produção)
         const meta = typeof document !== 'undefined' ? document.querySelector('meta[name="sp-api-base"]')?.content : '';
         if (meta && meta.trim()) {
             return meta.replace(/\/$/, '');
         }
-        // 3) Variável global injetável
+        
+        // 4) Variável global injetável
         if (typeof window !== 'undefined' && window.__SP_API_BASE__) {
             return String(window.__SP_API_BASE__).replace(/\/$/, '');
         }
-        // 4) Fallback dev
-        return 'http://127.0.0.1:5000';
+        
+        // 5) Fallback dev
+        return 'http://localhost:5000';
     } catch (e) {
-        return 'http://127.0.0.1:5000';
+        return 'http://localhost:5000';
     }
 }
 
 const API_BASE_URL = resolveApiBase();
+
+// Log da URL escolhida (apenas em dev)
+if (typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+)) {
+    console.log(`🌐 API Base URL: ${API_BASE_URL}`);
+}
 
 // 🚀 CACHE AGRESSIVO: 15 minutos para performance máxima
 const cache = new Map();
@@ -217,7 +243,15 @@ export const api = {
     clearCache() {
         cache.clear();
         console.log('🗑️ Cache limpo!');
+    },
+    
+    /**
+     * Obter URL base da API (para caso de precisar usar em outros lugares)
+     */
+    getBaseUrl() {
+        return API_BASE_URL;
     }
 };
 
 export default api;
+export { API_BASE_URL };

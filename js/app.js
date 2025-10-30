@@ -4,7 +4,7 @@
 
 import router from './router.js';
 import player from './player.js';
-import api from './utils/api.js';
+import api, { API_BASE_URL } from './utils/api.js';
 import * as Storage from './storage.js';
 import { cleanupMockData } from './utils/cleanup.js';
 import { $, showToast } from './utils/dom.js';
@@ -73,14 +73,15 @@ class App {
         try {
             const isHealthy = await api.checkHealth();
             if (isHealthy) {
-                console.log('✅ Backend conectado: http://localhost:5000');
+                console.log(`✅ Backend conectado: ${API_BASE_URL}`);
             } else {
-                console.warn('⚠️ Backend offline! Algumas funcionalidades podem não funcionar.');
-                showToast('⚠️ Backend offline. Inicie: python run_dev.py', 'error');
+                console.warn(`⚠️ Backend offline! (tentando: ${API_BASE_URL})`);
+                console.warn('⚠️ Algumas funcionalidades podem não funcionar.');
+                showToast(`⚠️ Backend offline. Inicie: python run_dev.py (tentando: ${API_BASE_URL})`, 'error');
             }
         } catch (error) {
-            console.error('❌ Erro ao verificar backend:', error);
-            showToast('❌ Erro ao conectar com backend', 'error');
+            console.error(`❌ Erro ao verificar backend (${API_BASE_URL}):`, error);
+            showToast(`❌ Erro ao conectar com backend (${API_BASE_URL})`, 'error');
         }
     }
     

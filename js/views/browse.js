@@ -76,12 +76,19 @@ function renderCharts(chartsData) {
     `).join('');
     
     carousel.querySelectorAll('.music-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.btn-play-card')) return;
+        const playBtn = card.querySelector('.btn-play-card');
+        const handler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const videoId = card.dataset.videoId;
-            player.loadTrack(videoId);
-            player.play();
-        });
+            if (videoId) {
+                player.loadTrack(videoId);
+                player.play();
+            }
+        };
+        // Tocar tanto pelo botão quanto pelo clique no card
+        card.addEventListener('click', handler);
+        if (playBtn) playBtn.addEventListener('click', handler);
     });
 }
 

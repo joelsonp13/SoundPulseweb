@@ -83,7 +83,7 @@ export function normalizeAlbum(ytAlbum) {
         id: ytAlbum.browseId || ytAlbum.id,
         browseId: ytAlbum.browseId || ytAlbum.id,
         title: ytAlbum.title || ytAlbum.name || 'Unknown Album',
-        artist: ytAlbum.artists?.[0]?.name || ytAlbum.artist || 'Unknown Artist',
+        artist: ytAlbum.artists?.[0]?.name || ytAlbum.artist || '',
         artistId: ytAlbum.artists?.[0]?.id,
         image: getThumbnail(ytAlbum.thumbnails || ytAlbum.thumbnail),
         year: ytAlbum.year,
@@ -99,6 +99,14 @@ export function normalizeAlbum(ytAlbum) {
 export function normalizePlaylist(ytPlaylist) {
     if (!ytPlaylist) return null;
 
+    // Extrair nome do autor (pode vir como dict ou string)
+    let author = ytPlaylist.author?.name || ytPlaylist.author || '';
+    
+    // Filtrar "YouTube Music" - remover marca
+    if (author === 'YouTube Music') {
+        author = '';
+    }
+
     return {
         id: ytPlaylist.browseId || ytPlaylist.id,
         browseId: ytPlaylist.browseId || ytPlaylist.id,
@@ -106,7 +114,7 @@ export function normalizePlaylist(ytPlaylist) {
         description: ytPlaylist.description || '',
         image: getThumbnail(ytPlaylist.thumbnails || ytPlaylist.thumbnail),
         trackCount: ytPlaylist.trackCount || ytPlaylist.tracks?.length || 0,
-        author: ytPlaylist.author?.name || ytPlaylist.author || 'YouTube Music',
+        author: author,
         type: 'playlist'
     };
 }

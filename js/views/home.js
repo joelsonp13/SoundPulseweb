@@ -176,15 +176,20 @@ function renderGreetingGrid(recentTracks, homeData) {
     
     grid.innerHTML = htmlItems.join('');
     
-    // Add click handlers
+    // Add click handlers (card and play button)
     grid.querySelectorAll('.greeting-card').forEach(card => {
-        card.addEventListener('click', () => {
+        const playBtn = card.querySelector('.greeting-card-play');
+        const handler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const videoId = card.dataset.videoId;
             if (videoId) {
                 player.loadTrack(videoId);
                 player.play();
             }
-        });
+        };
+        card.addEventListener('click', handler);
+        if (playBtn) playBtn.addEventListener('click', handler);
     });
 }
 
@@ -192,22 +197,38 @@ function renderCharts(chartsData) {
     const carousel = $('#chartsCarousel');
     if (!carousel) return;
     
-    // ytmusicapi retorna videos (Top Charts)
-    const tracks = chartsData.videos || [];
+    // CORREÇÃO: chartsData.videos retorna playlists (com playlistId), não músicas (com videoId)
+    const playlists = chartsData.videos || chartsData.trending || [];
     
-    if (tracks.length === 0) {
+    // Debug: verificar estrutura dos dados
+    if (playlists.length > 0) {
+        console.log('📊 Charts data structure:', { 
+            firstItem: playlists[0], 
+            hasPlaylistId: !!playlists[0]?.playlistId,
+            hasVideoId: !!playlists[0]?.videoId
+        });
+    }
+    
+    if (playlists.length === 0) {
         carousel.innerHTML = '<p style="color: var(--color-text-secondary);">Nenhum chart disponível</p>';
         return;
     }
     
-    carousel.innerHTML = tracks.slice(0, 10).map((track, index) => {
-        const videoId = track.videoId;
+    carousel.innerHTML = playlists.slice(0, 10).map((track, index) => {
+        const playlistId = track.playlistId;  // Mudança: usar playlistId em vez de videoId
+        
+        // Validação: ignorar items sem playlistId
+        if (!playlistId) {
+            console.warn('⚠️ Chart item sem playlistId:', track);
+            return '';
+        }
+        
         const title = track.title || 'Unknown';
         const artist = track.artists?.[0]?.name || 'Unknown';
         const image = getBestThumbnail(track.thumbnails);
         
         return `
-            <div class="music-card" data-video-id="${videoId}">
+            <div class="music-card" data-playlist-id="${playlistId}">
                 <div class="music-card-image">
                     <img src="${image}" alt="${title}" loading="lazy" decoding="async">
                     <div class="music-card-overlay">
@@ -225,17 +246,24 @@ function renderCharts(chartsData) {
                 </div>
             </div>
         `;
-    }).join('');
+    }).filter(Boolean).join('');  // Filtrar items vazios
     
-    // Add click handlers
+    // Add click handlers (card and play button) - agora navega para playlist
     carousel.querySelectorAll('.music-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const videoId = card.dataset.videoId;
-            if (videoId) {
-                player.loadTrack(videoId);
-                player.play();
+        const playBtn = card.querySelector('.btn-play-card');
+        const handler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const playlistId = card.dataset.playlistId;
+            if (playlistId) {
+                // Navegar para página da playlist em vez de tentar tocar
+                window.location.hash = `#/playlist/${playlistId}`;
+            } else {
+                console.error('❌ Card sem playlistId:', card);
             }
-        });
+        };
+        card.addEventListener('click', handler);
+        if (playBtn) playBtn.addEventListener('click', handler);
     });
 }
 
@@ -244,17 +272,46 @@ function renderHomeSections(homeData) {
     
     if (!sectionsContainer) return;
     
+    // Debug: verificar estrutura dos dados
+    console.log('📊 Home data structure:', { 
+        isArray: Array.isArray(homeData),
+        length: Array.isArray(homeData) ? homeData.length : 'N/A',
+        firstSection: Array.isArray(homeData) && homeData.length > 0 ? homeData[0] : null,
+        rawData: homeData
+    });
+    
     // Home data do ytmusicapi É um array direto de seções
     const sections = Array.isArray(homeData) ? homeData : [];
     
-    if (sections.length === 0) return;
+    if (sections.length === 0) {
+        console.warn('⚠️ Nenhuma seção encontrada em homeData');
+        return;
+    }
+    
+    console.log(`✅ Renderizando ${sections.length} seções`);
     
     // Renderizar cada seção
     const sectionsHTML = sections.map((section, index) => {
         const title = section.title || 'Seção';
         const contents = section.contents || [];
         
-        if (contents.length === 0) return '';
+        console.log(`   Seção ${index + 1}: "${title}" - ${contents.length} items`);
+        
+        if (contents.length === 0) {
+            console.warn(`   ⚠️ Seção "${title}" vazia`);
+            return '';
+        }
+        
+        // Renderizar items e verificar se retornou HTML
+        const itemsHTML = contents.filter(Boolean).map(item => {
+            const html = renderHomeItem(item);
+            if (!html) {
+                console.warn(`   ⚠️ Item renderizado vazio:`, item);
+            }
+            return html;
+        }).join('');
+        
+        console.log(`   ↳ Renderizou ${itemsHTML.length} chars de HTML`);
         
         const sectionId = `carousel-${index}`;
         
@@ -270,7 +327,7 @@ function renderHomeSections(homeData) {
                         </svg>
                     </button>
                     <div class="carousel" id="${sectionId}">
-                        ${contents.filter(Boolean).map(item => renderHomeItem(item)).join('')}
+                        ${itemsHTML}
                     </div>
                     <button class="carousel-nav carousel-nav-next" data-carousel="${sectionId}" aria-label="Próximo">
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -282,6 +339,7 @@ function renderHomeSections(homeData) {
         `;
     }).filter(Boolean).join('');
     
+    console.log(`✅ HTML total gerado: ${sectionsHTML.length} chars`);
     sectionsContainer.innerHTML = sectionsHTML;
     
     // Add click handlers to all items
@@ -290,12 +348,33 @@ function renderHomeSections(homeData) {
 
 function renderHomeItem(item) {
     if (!item) return '';
-    const videoId = item.videoId || item.browseId;
-    if (!videoId) return '';
+    
+    // Detectar tipo automaticamente se não tiver resultType
+    let type = item.resultType;
+    if (!type) {
+        if (item.videoId) {
+            type = 'song';  // Se tem videoId, é música/vídeo
+        } else if (item.playlistId) {
+            type = 'playlist';
+        } else if (item.browseId) {
+            // Precisamos detectar se é album, artist, etc pela estrutura
+            type = 'unknown';
+        }
+    }
+    
+    // Usar playlistId se disponível, senão videoId ou browseId
+    const videoId = item.playlistId || item.videoId || item.browseId;
+    if (!videoId) {
+        console.warn('⚠️ Item sem IDs válidos:', item);
+        return '';
+    }
     const title = item.title || 'Unknown';
     const subtitle = item.artists?.[0]?.name || item.author || item.description || '';
     const image = getBestThumbnail(item.thumbnails);
-    const type = item.resultType || 'unknown';
+    
+    if (!image) {
+        console.warn('⚠️ Item sem thumbnail:', title);
+    }
     
     return `
         <div class="music-card" data-id="${videoId}" data-type="${type}">
@@ -319,24 +398,34 @@ function renderHomeItem(item) {
 
 function setupHomeItemHandlers() {
     document.querySelectorAll('.music-card[data-id]').forEach(card => {
-        card.addEventListener('click', (e) => {
+        const playBtn = card.querySelector('.btn-play-card');
+        const onPlay = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const id = card.dataset.id;
             const type = card.dataset.type;
-            
             if (type === 'song' || type === 'video') {
                 player.loadTrack(id);
                 player.play();
-                return;
             }
-            
+        };
+        const onNavigate = () => {
+            const id = card.dataset.id;
+            const type = card.dataset.type;
             if (type === 'playlist') {
                 window.location.hash = `#/playlist/${id}`;
             } else if (type === 'album') {
                 window.location.hash = `#/album/${id}`;
             } else if (type === 'artist') {
                 window.location.hash = `#/artist/${id}`;
+            } else if (type === 'song' || type === 'video') {
+                // Se o tipo for música/vídeo, clique no card também toca
+                player.loadTrack(id);
+                player.play();
             }
-        });
+        };
+        card.addEventListener('click', onNavigate);
+        if (playBtn) playBtn.addEventListener('click', onPlay);
     });
 }
 
@@ -344,14 +433,48 @@ function setupHeroButton(chartsData) {
     const btn = $('#playTopCharts');
     if (!btn) return;
     
-    btn.addEventListener('click', () => {
-        // CORREÇÃO: usar chartsData.videos
-        const tracks = chartsData.videos || [];
-        if (tracks.length > 0) {
-            const firstTrack = tracks[0];
-            player.loadTrack(firstTrack.videoId);
-            player.play();
-            showToast('🎵 Tocando Top Charts!', 'success');
+    btn.addEventListener('click', async () => {
+        // Charts retorna playlists, não músicas diretas
+        const playlists = chartsData.videos || chartsData.trending || [];
+        
+        if (playlists.length === 0) {
+            showToast('⚠️ Nenhuma playlist disponível', 'warning');
+            return;
+        }
+        
+        const firstPlaylist = playlists[0];
+        const playlistId = firstPlaylist.playlistId;
+        
+        console.log('🎯 Hero button clicked:', { firstPlaylist, playlistId }); // Debug
+        
+        if (!playlistId) {
+            console.error('❌ Primeira playlist não tem playlistId!', firstPlaylist);
+            showToast('❌ Erro: playlist inválida', 'error');
+            return;
+        }
+        
+        // Carregar playlist e tocar primeira música
+        try {
+            const playlistData = await api.getPlaylist(playlistId, 100);
+            const tracks = playlistData.tracks || [];
+            
+            if (tracks.length > 0) {
+                const firstTrack = tracks[0];
+                const videoId = firstTrack.videoId;
+                
+                if (videoId) {
+                    player.loadTrack(videoId);
+                    player.play();
+                    showToast('🎵 Tocando Top Charts!', 'success');
+                } else {
+                    showToast('❌ Erro: música inválida', 'error');
+                }
+            } else {
+                showToast('⚠️ Playlist vazia', 'warning');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar playlist:', error);
+            showToast('❌ Erro ao carregar Top Charts', 'error');
         }
     });
 }

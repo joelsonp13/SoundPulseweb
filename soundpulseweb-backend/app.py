@@ -346,8 +346,35 @@ def get_album(browse_id):
 def get_playlist(browse_id):
     """
     Obter detalhes e faixas de playlist
+    Suporta tanto playlists normais quanto albums (OLAK5uy_ IDs)
     """
     limit = int(request.args.get('limit', 100))
+    
+    # Detectar se é um Album ID (OLAK5uy_...) dos Top Charts
+    if browse_id.startswith('OLAK5uy_'):
+        print(f"[PLAYLIST] Detectado Album ID: {browse_id}")
+        # Converter para Album Browse ID (MPRE...)
+        album_browse_id = yt.get_album_browse_id(browse_id)
+        print(f"[PLAYLIST] Album Browse ID: {album_browse_id}")
+        
+        # Buscar album com ID convertido
+        album = yt.get_album(album_browse_id)
+        
+        # Normalizar resposta de album para formato de playlist
+        return jsonify({
+            'id': album_browse_id,
+            'audioPlaylistId': browse_id,
+            'title': album.get('title'),
+            'description': album.get('description'),
+            'thumbnails': album.get('thumbnails'),
+            'author': album.get('artist'),  # artist → author
+            'year': album.get('year'),
+            'trackCount': album.get('trackCount'),
+            'duration': album.get('duration'),
+            'tracks': album.get('tracks', [])
+        })
+    
+    # Playlist normal (VL, PL, RDCLAK, etc)
     playlist = yt.get_playlist(browse_id, limit=limit)
     return jsonify(playlist)
 
@@ -463,10 +490,22 @@ def stream_audio(video_id):
     print(f"[STREAM-FALLBACK] Extraindo stream para: {video_id}")
     
     ydl_opts = {
-        'format': 'bestaudio/best',
+        # Prefer purely audio-only streams, keeping common m4a first
+        'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
+        'nocheckcertificate': True,
+        'geo_bypass': True,
+        'noprogress': True,
+        # Help avoid 403/429 by setting sane headers
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.youtube.com/',
+            'Origin': 'https://www.youtube.com'
+        },
     }
     
     try:
@@ -475,10 +514,15 @@ def stream_audio(video_id):
             
             # Pegar URL de stream de áudio
             audio_url = None
-            for format in info.get('formats', []):
-                if format.get('acodec') != 'none' and format.get('vcodec') == 'none':
-                    audio_url = format.get('url')
-                    break
+            for fmt in info.get('formats', []):
+                if fmt.get('acodec') and fmt.get('acodec') != 'none' and (fmt.get('vcodec') in (None, 'none')):
+                    # Prefer m4a when possible
+                    if fmt.get('ext') == 'm4a':
+                        audio_url = fmt.get('url')
+                        break
+                    # Otherwise take the first audio-only candidate
+                    if not audio_url:
+                        audio_url = fmt.get('url')
             
             if not audio_url:
                 audio_url = info.get('url')
@@ -491,8 +535,12 @@ def stream_audio(video_id):
                 'thumbnail': info.get('thumbnail')
             })
     except Exception as e:
-        print(f"[ERRO] stream_audio falhou: {type(e).__name__}: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        msg = str(e)
+        print(f"[ERRO] stream_audio falhou: {type(e).__name__}: {msg}")
+        # Retornar 404 quando o vídeo não estiver disponível (evita retries inúteis no frontend)
+        if 'Video unavailable' in msg or 'This video is not available' in msg:
+            return jsonify({'error': 'video_unavailable', 'message': 'Este vídeo não está disponível'}), 404
+        return jsonify({'error': msg}), 500
 
 # ============================================
 # RUN

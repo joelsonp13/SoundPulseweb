@@ -7,6 +7,7 @@ import * as Storage from './storage.js';
 import { $ } from './utils/dom.js';
 import AudioVisualizer from './visualizer.js';
 import YouTubePlayer from './youtube-player.js';
+import { API_BASE_URL } from './utils/api.js';
 
 // Performance helper: throttle using RequestAnimationFrame
 function rafThrottle(callback) {
@@ -145,7 +146,10 @@ class MusicPlayer {
         this._prefetch = { videoId, promise: null, url: null };
         this._prefetch.promise = (async () => {
             try {
-                const resp = await fetch(`http://localhost:5000/api/stream/${videoId}`);
+                const resp = await fetch(`${API_BASE_URL}/api/stream/${videoId}`);
+                if (!resp.ok) {
+                    throw new Error(`HTTP ${resp.status}`);
+                }
                 const data = await resp.json();
                 if (data?.streamUrl) {
                     this._prefetch.url = data.streamUrl;
@@ -202,7 +206,14 @@ class MusicPlayer {
             // Usar URL já prefetechada ou buscar
             let streamUrl = prefetchedUrl;
             if (!streamUrl) {
-                const response = await fetch(`http://localhost:5000/api/stream/${videoId}`);
+                const response = await fetch(`${API_BASE_URL}/api/stream/${videoId}`);
+                if (!response.ok) {
+                    // Em caso de 404/unavailable, pular para a próxima música
+                    if (response.status === 404) {
+                        throw new Error('Vídeo indisponível');
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 const data = await response.json();
                 if (!data.streamUrl) throw new Error('Stream URL não encontrado');
                 streamUrl = data.streamUrl;
@@ -379,7 +390,7 @@ class MusicPlayer {
             
             // Buscar dados completos do backend (async)
             try {
-                const response = await fetch(`http://localhost:5000/api/song/${videoId}`);
+                const response = await fetch(`${API_BASE_URL}/api/song/${videoId}`);
                 const songData = await response.json();
                 
                 // Converter duração se vier como string "3:45"

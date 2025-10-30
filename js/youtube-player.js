@@ -34,10 +34,12 @@ class YouTubePlayer {
                 'modestbranding': 1,
                 'playsinline': 1,
                 'rel': 0,
-                'showinfo': 0,
+                // 'showinfo' é deprecado e pode causar warnings
                 'iv_load_policy': 3,
                 'cc_load_policy': 0,
-                'origin': window.location.origin
+                'enablejsapi': 1,
+                'origin': window.location.origin,
+                'host': 'https://www.youtube.com'
             },
             events: {
                 'onReady': (event) => this.onPlayerReady(event),
