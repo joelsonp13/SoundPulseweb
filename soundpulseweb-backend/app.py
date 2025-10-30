@@ -331,48 +331,36 @@ def get_artist(browse_id):
         # Priorizar channelId como identificador principal
         primary_id = channel_id or browse_id_returned or artist_id
         
-        # 🔧 CORREÇÃO: Validação de consistência melhorada
+        # Validação estrita: se o ID retornado não for exatamente o solicitado
         if primary_id and primary_id != normalized_id:
-            print(f"[WARNING] ID inconsistente detectado:")
-            print(f"[WARNING]   Solicitado: {normalized_id}")
-            print(f"[WARNING]   Retornado: {primary_id}")
-            print(f"[WARNING]   Nome: {artist.get('name', 'N/A')}")
-            
-            # 🔧 CORREÇÃO: Tentar buscar com o ID retornado para verificar se é o mesmo artista
-            try:
-                verification_artist = yt.get_artist(primary_id)
-                if verification_artist and verification_artist.get('name') == artist.get('name'):
-                    print(f"[INFO] Verificação: Mesmo artista, usando ID retornado")
-                    artist = verification_artist
-                    primary_id = verification_artist.get('channelId') or verification_artist.get('browseId') or verification_artist.get('id')
-                else:
-                    print(f"[WARNING] Verificação falhou, mantendo dados originais")
-                    artist['_inconsistentId'] = True
-                    artist['_requestedId'] = normalized_id
-                    artist['_returnedId'] = primary_id
-            except Exception as e:
-                print(f"[WARNING] Erro na verificação: {e}")
-                artist['_inconsistentId'] = True
-                artist['_requestedId'] = normalized_id
-                artist['_returnedId'] = primary_id
+            print(f"[ERROR] Artista retornou ID diferente do solicitado! Bloqueando dados para evitar fallback." )
+            print(f"[ERROR] Solicitado: {normalized_id} | Retornado: {primary_id}")
+            # OPÇÃO 1: Retornar objeto mínimo (preferido pelo plano)
+            minimal_obj = {
+                "name": artist.get("name", None),
+                "id": normalized_id,
+                "_incomplete": True,
+                "_requestedId": normalized_id,
+                "_returnedId": primary_id
+            }
+            # OPÇÃO 2: Retornar 404 strictly, uncomment to force 404 always
+            # return jsonify({"error": "Artista não encontrado", "id": normalized_id, "_incomplete": True, "_requestedId": normalized_id, "_returnedId": primary_id}), 404
+            return jsonify(minimal_obj), 200
         else:
             print(f"[SUCCESS] ID consistente: {primary_id}")
-        
-        # 🔧 CORREÇÃO: Garantir que os IDs estão corretamente mapeados
-        artist['browseId'] = primary_id
-        artist['channelId'] = channel_id or primary_id
-        artist['id'] = primary_id
-        
-        # Adicionar metadados de debug
-        artist['_debug'] = {
-            'requestedId': normalized_id,
-            'returnedBrowseId': browse_id_returned,
-            'returnedChannelId': channel_id,
-            'returnedId': artist_id,
-            'primaryId': primary_id
-        }
-        
-        return jsonify(artist)
+            # 🔧 CORREÇÃO: Garantir que os IDs estão corretamente mapeados
+            artist['browseId'] = primary_id
+            artist['channelId'] = channel_id or primary_id
+            artist['id'] = primary_id
+            # Adicionar metadados de debug
+            artist['_debug'] = {
+                'requestedId': normalized_id,
+                'returnedBrowseId': browse_id_returned,
+                'returnedChannelId': channel_id,
+                'returnedId': artist_id,
+                'primaryId': primary_id
+            }
+            return jsonify(artist)
             
     except Exception as e:
         print(f"[ERROR] Erro ao buscar artista {browse_id}: {e}")

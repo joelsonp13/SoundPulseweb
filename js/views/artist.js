@@ -18,57 +18,40 @@ export async function initArtistView(browseId) {
     
     try {
         console.log('🌐 1/2 Buscando dados do artista...'); // Debug
-        
         // 1️⃣ Buscar info do artista primeiro (para pegar channelId se necessário)
         const artistData = await api.getArtist(browseId);
-        
         console.log('✅ Dados do artista recebidos:', artistData); // Debug
-        
-        // 🔍 VALIDAÇÃO CRÍTICA: Verificar se o artista retornado corresponde ao ID solicitado
-        const returnedArtistId = artistData.browseId || artistData.id || artistData.channelId;
-        if (returnedArtistId && returnedArtistId !== browseId) {
-            console.warn(`⚠️ INCONSISTÊNCIA DE ID DETECTADA!`);
-            console.warn(`   Solicitado: ${browseId}`);
-            console.warn(`   Retornado: ${returnedArtistId}`);
-            console.warn(`   Nome: ${artistData.name || 'N/A'}`);
-            
-            // Estratégia de fallback: tentar diferentes abordagens
-            try {
-                console.log('🔄 Tentando estratégia de fallback...');
-                
-                // 1. Tentar buscar novamente com o ID retornado
-                const correctedArtistData = await api.getArtist(returnedArtistId);
-                console.log('✅ Dados corrigidos (método 1):', correctedArtistData);
-                
-                // 2. Verificar se o ID corrigido é consistente
-                const correctedId = correctedArtistData.browseId || correctedArtistData.id || correctedArtistData.channelId;
-                if (correctedId === returnedArtistId) {
-                    console.log('✅ ID consistente após correção');
-                    Object.assign(artistData, correctedArtistData);
-                } else {
-                    console.warn('⚠️ ID ainda inconsistente após correção, usando dados originais');
-                    // Manter dados originais mas adicionar flag de inconsistência
-                    artistData._inconsistentId = true;
-                    artistData._requestedId = browseId;
-                    artistData._returnedId = returnedArtistId;
-                }
-            } catch (fallbackError) {
-                console.error('❌ Falha na estratégia de fallback:', fallbackError);
-                // Manter dados originais mas adicionar flag de inconsistência
-                artistData._inconsistentId = true;
-                artistData._requestedId = browseId;
-                artistData._returnedId = returnedArtistId;
-            }
+
+        // NOVO: Tratamento especial para resposta mínima do backend (_incomplete)
+        if (artistData._incomplete === true) {
+            container.innerHTML = `
+                <div class="artist-view artist-incomplete">
+                    <div class="artist-hero">
+                        <div class="artist-hero-bg">
+                            <img src="assets/images/covers/placeholder.svg" alt="Artista não encontrado">
+                        </div>
+                        <div class="artist-hero-overlay"></div>
+                        <div class="artist-hero-content">
+                            <h1 class="artist-name">${artistData.name || 'Artista não encontrado'}</h1>
+                            <p class="artist-id">ID: <span>${artistData.id || browseId}</span></p>
+                            <div class="artist-warning" style="margin-top:1em;color:#856404;background:#fff3cd;padding:8px;border-radius:3px;">
+                                <b>Artista não encontrado</b><br>
+                                Nenhum dado disponível para este ID.<br>
+                                Verifique se o código está correto ou tente outro artista.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
         }
-        
+
         // 2️⃣ Buscar álbuns (pode usar channelId se disponível)
         const channelId = artistData.channelId || artistData.params;
         console.log('🌐 2/2 Buscando álbuns do artista... channelId:', channelId); // Debug
-        
         const albumsData = await api.getArtistAlbums(browseId, channelId);
-        
         console.log('✅ Álbuns recebidos:', albumsData); // Debug
-        
+
         renderArtist(container, artistData, albumsData);
     } catch (error) {
         console.error('❌ Error loading artist:', error);

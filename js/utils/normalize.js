@@ -58,10 +58,18 @@ export function normalizeTrack(ytTrack) {
  */
 export function normalizeArtist(ytArtist) {
     if (!ytArtist) return null;
+    if (ytArtist._incomplete === true) {
+        // Retornar objeto mínimo, sem possibilidade de fallback ou enriquecimento de dados!
+        return {
+            id: ytArtist.id || ytArtist.browseId || ytArtist.channelId,
+            browseId: ytArtist.id || ytArtist.browseId || ytArtist.channelId,
+            name: ytArtist.name || 'Artista não encontrado',
+            _incomplete: true
+        };
+    }
 
     // O browseId do artista pode vir como browseId, id ou channelId
     const artistId = ytArtist.browseId || ytArtist.id || ytArtist.channelId;
-    
     // 🔍 VALIDAÇÃO: Garantir que temos um ID válido
     if (!artistId) {
         console.warn('⚠️ Artista sem ID válido:', ytArtist);
