@@ -229,9 +229,7 @@ function renderCharts(chartsData) {
     
     // Add click handlers
     carousel.querySelectorAll('.music-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.btn-play-card')) return;
-            
+        card.addEventListener('click', () => {
             const videoId = card.dataset.videoId;
             if (videoId) {
                 player.loadTrack(videoId);
@@ -322,15 +320,16 @@ function renderHomeItem(item) {
 function setupHomeItemHandlers() {
     document.querySelectorAll('.music-card[data-id]').forEach(card => {
         card.addEventListener('click', (e) => {
-            if (!e.target.closest('.btn-play-card')) return;
-            
             const id = card.dataset.id;
             const type = card.dataset.type;
             
             if (type === 'song' || type === 'video') {
                 player.loadTrack(id);
                 player.play();
-            } else if (type === 'playlist') {
+                return;
+            }
+            
+            if (type === 'playlist') {
                 window.location.hash = `#/playlist/${id}`;
             } else if (type === 'album') {
                 window.location.hash = `#/album/${id}`;
