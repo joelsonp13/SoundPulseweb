@@ -226,6 +226,14 @@ export const api = {
     },
 
     /**
+     * PODCASTS - Lista de podcasts com filtros
+     */
+    async getPodcasts(filter = 'all') {
+        const params = new URLSearchParams({ filter });
+        return await fetchAPI(`/api/podcasts?${params}`);
+    },
+
+    /**
      * HEALTH - Verificar se backend está online
      */
     async checkHealth() {

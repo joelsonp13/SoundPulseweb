@@ -469,6 +469,110 @@ def get_mood_playlists(params):
     return jsonify(playlists)
 
 # ============================================
+# PODCASTS (Mock data - future integration)
+# ============================================
+
+@app.route('/api/podcasts', methods=['GET'])
+@handle_errors
+@timed_cache(seconds=1800)
+def get_podcasts():
+    """
+    Obter lista de podcasts do YouTube Music
+    Busca podcasts populares usando search + get_podcast
+    """
+    limit = int(request.args.get('limit', 20))
+    
+    try:
+        # Buscar podcasts populares (usa busca genérica, ytmusicapi filtra)
+        search_results = yt.search('podcast', filter=None, limit=limit*2)  # Buscar mais para filtrar
+        
+        # Filtrar apenas resultados do tipo podcast
+        podcast_results = [r for r in search_results if r.get('resultType') == 'podcast']
+        
+        # Limitar e buscar detalhes
+        podcasts = []
+        for p in podcast_results[:limit]:
+            try:
+                # Obter detalhes completos do podcast
+                browse_id = p.get('browseId')
+                if not browse_id:
+                    continue
+                
+                podcast_details = yt.get_podcast(browse_id, limit=3)
+                
+                # Normalizar estrutura para o frontend
+                podcast_data = {
+                    'id': browse_id,
+                    'browseId': browse_id,
+                    'title': podcast_details.get('title', p.get('title', 'Unknown Podcast')),
+                    'author': podcast_details.get('author', {}).get('name', 'Unknown Author'),
+                    'description': podcast_details.get('description', '')[:200] + '...' if len(podcast_details.get('description', '')) > 200 else podcast_details.get('description', ''),
+                    'image': get_best_thumbnail(podcast_details.get('thumbnails', []) or p.get('thumbnails', [])),
+                    'episodes': len(podcast_details.get('episodes', [])),
+                    'followers': 0,  # Não disponível sem auth
+                    'isFollowing': False,
+                    'latestEpisodes': []
+                }
+                
+                # Adicionar episódios recentes
+                for ep in podcast_details.get('episodes', [])[:3]:
+                    duration_sec = parse_duration_to_seconds(ep.get('duration', '0'))
+                    episode_data = {
+                        'id': ep.get('browseId', ep.get('videoId', '')),
+                        'title': ep.get('title', 'Unknown Episode'),
+                        'duration': duration_sec,
+                        'date': ep.get('date', ''),
+                        'progress': 0
+                    }
+                    podcast_data['latestEpisodes'].append(episode_data)
+                
+                podcasts.append(podcast_data)
+                
+            except Exception as e:
+                print(f"[PODCAST] Erro ao buscar detalhes de {p.get('title', 'Unknown')}: {e}")
+                continue
+        
+        return jsonify({'results': podcasts})
+        
+    except Exception as e:
+        print(f"[PODCAST] Erro ao buscar podcasts: {e}")
+        # Retornar erro ou lista vazia
+        return jsonify({'results': [], 'error': str(e)})
+
+def get_best_thumbnail(thumbnails):
+    """Obter melhor thumbnail de uma lista"""
+    if not thumbnails:
+        return ''
+    
+    # Priorizar thumbnails maiores
+    sorted_thumbs = sorted(thumbnails, key=lambda x: x.get('width', 0), reverse=True)
+    return sorted_thumbs[0].get('url', '')
+
+def parse_duration_to_seconds(duration_str):
+    """Converter duração do formato '25 min' ou '1h 30min' para segundos"""
+    if not duration_str:
+        return 0
+    
+    total_seconds = 0
+    
+    # Procurar horas
+    if 'h' in duration_str:
+        hours = int(duration_str.split('h')[0])
+        total_seconds += hours * 3600
+        duration_str = duration_str.split('h')[1].strip()
+    
+    # Procurar minutos
+    if 'min' in duration_str or 'm' in duration_str:
+        mins_part = duration_str.split('min')[0] if 'min' in duration_str else duration_str.split('m')[0]
+        try:
+            minutes = int(mins_part.strip())
+            total_seconds += minutes * 60
+        except:
+            pass
+    
+    return total_seconds
+
+# ============================================
 # ERROR HANDLERS
 # ============================================
 

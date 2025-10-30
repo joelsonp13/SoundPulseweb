@@ -572,6 +572,90 @@
         min-width: 120px;
     }
     
+    /* Browse categories on mobile */
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    .category-card {
+        padding: var(--spacing-md);
+    }
+    
+    .category-card h3 {
+        font-size: var(--font-size-base);
+    }
+    
+    /* Radio on mobile */
+    .radio-hero {
+        padding: var(--spacing-xl) 0;
+    }
+    
+    .radio-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .radio-title {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .radio-subtitle {
+        font-size: var(--font-size-sm);
+    }
+    
+    .radio-search {
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .radio-search-box {
+        padding: var(--spacing-sm) var(--spacing-lg);
+    }
+    
+    .radio-search-box input {
+        font-size: var(--font-size-sm);
+    }
+    
+    .radio-suggestion-item {
+        padding: var(--spacing-sm);
+    }
+    
+    .radio-suggestion-item img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .radio-placeholder {
+        padding: var(--spacing-2xl) var(--spacing-md);
+    }
+    
+    .radio-placeholder p {
+        font-size: var(--font-size-base);
+    }
+    
+    .radio-placeholder-hint {
+        font-size: var(--font-size-sm);
+    }
+    
+    .radio-station-header h2 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .radio-tracks .track-item {
+        grid-template-columns: 32px 40px 1fr;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs);
+    }
+    
+    .radio-tracks .track-cover {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .radio-tracks .track-number {
+        font-size: var(--font-size-xs);
+    }
+    
     /* Sections */
     .section {
         margin-bottom: var(--spacing-xl);
@@ -693,6 +777,65 @@
     .album-actions,
     .playlist-actions {
         flex-wrap: wrap;
+    }
+    
+    /* Browse categories */
+    .categories-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    .category-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .category-card h3 {
+        font-size: var(--font-size-lg);
+    }
+    
+    /* Radio on tablet */
+    .radio-view {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+    
+    .radio-hero {
+        padding: var(--spacing-2xl) 0;
+        margin-bottom: var(--spacing-2xl);
+    }
+    
+    .radio-icon {
+        font-size: 3rem;
+    }
+    
+    .radio-title {
+        font-size: var(--font-size-3xl);
+    }
+    
+    .radio-subtitle {
+        font-size: var(--font-size-base);
+    }
+    
+    .radio-search {
+        margin-bottom: var(--spacing-2xl);
+    }
+    
+    .radio-station-header h2 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    /* Radio tracks on tablet */
+    .radio-tracks .track-item {
+        grid-template-columns: 32px 40px 1fr 40px;
+        gap: var(--spacing-sm);
+    }
+    
+    .radio-tracks .track-cover {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .radio-tracks .track-number {
+        font-size: var(--font-size-xs);
     }
     
     /* Queue and Lyrics panels */

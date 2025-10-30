@@ -4,91 +4,43 @@
 
 import { $ } from '../utils/dom.js';
 import { formatDuration } from '../utils/time.js';
+import api from '../utils/api.js';
+import { showLoading, showError } from '../components/loading.js';
 
-// Mock data de podcasts
-const podcastsData = [
-    {
-        id: 'podcast-1',
-        title: 'Tech Talk Daily',
-        author: 'John Developer',
-        description: 'Discussões sobre tecnologia e inovação',
-        image: 'assets/images/covers/placeholder.svg',
-        episodes: 156,
-        followers: 125000,
-        isFollowing: false,
-        latestEpisodes: [
-            { id: 'ep1', title: 'O Futuro da IA', duration: 3420, date: '2025-10-25', progress: 0 },
-            { id: 'ep2', title: 'Web3 e Blockchain', duration: 2880, date: '2025-10-22', progress: 65 },
-            { id: 'ep3', title: 'Segurança Cibernética', duration: 3120, date: '2025-10-20', progress: 100 }
-        ]
-    },
-    {
-        id: 'podcast-2',
-        title: 'Histórias Inspiradoras',
-        author: 'Maria Santos',
-        description: 'Entrevistas com pessoas que mudaram o mundo',
-        image: 'assets/images/covers/placeholder.svg',
-        episodes: 89,
-        followers: 98000,
-        isFollowing: true,
-        latestEpisodes: [
-            { id: 'ep1', title: 'Elon Musk e SpaceX', duration: 4200, date: '2025-10-24', progress: 30 },
-            { id: 'ep2', title: 'Malala Yousafzai', duration: 3600, date: '2025-10-21', progress: 0 }
-        ]
-    },
-    {
-        id: 'podcast-3',
-        title: 'Música e Cultura',
-        author: 'Carlos Mendes',
-        description: 'Explorando a história da música mundial',
-        image: 'assets/images/covers/placeholder.svg',
-        episodes: 203,
-        followers: 156000,
-        isFollowing: false,
-        latestEpisodes: [
-            { id: 'ep1', title: 'Rock dos Anos 70', duration: 2940, date: '2025-10-26', progress: 0 },
-            { id: 'ep2', title: 'Samba e Bossa Nova', duration: 3300, date: '2025-10-23', progress: 45 }
-        ]
-    },
-    {
-        id: 'podcast-4',
-        title: 'Filosofia Prática',
-        author: 'Ana Filosofa',
-        description: 'Filosofia aplicada ao dia a dia',
-        image: 'assets/images/covers/placeholder.svg',
-        episodes: 67,
-        followers: 45000,
-        isFollowing: true,
-        latestEpisodes: [
-            { id: 'ep1', title: 'Estoicismo Moderno', duration: 2700, date: '2025-10-25', progress: 100 },
-            { id: 'ep2', title: 'Ética no Trabalho', duration: 3000, date: '2025-10-22', progress: 0 }
-        ]
-    }
-];
-
+let podcastsData = [];
 let currentFilter = 'all';
 
-export function initPodcastsView() {
+export async function initPodcastsView() {
     const container = $('#viewContainer');
     if (!container) return;
     
-    container.innerHTML = `
-        <div class="podcasts-view">
-            <h1 class="podcasts-title">Podcasts</h1>
-            
-            <div class="podcasts-filters">
-                <button class="filter-btn active" data-filter="all">Todos</button>
-                <button class="filter-btn" data-filter="following">Seguindo</button>
-                <button class="filter-btn" data-filter="downloaded">Baixados</button>
-            </div>
-            
-            <div class="podcasts-grid" id="podcastsGrid">
-                ${renderPodcasts()}
-            </div>
-        </div>
-    `;
+    showLoading(container, 'grid');
     
-    setupPodcastsEvents();
+    try {
+        const response = await api.getPodcasts('all');
+        podcastsData = response.results || [];
+        
+        container.innerHTML = `
+            <div class="podcasts-view">
+                <h1 class="podcasts-title">Podcasts</h1>
+                
+                <div class="podcasts-filters">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                    <button class="filter-btn" data-filter="following">Seguindo</button>
+                    <button class="filter-btn" data-filter="downloaded">Baixados</button>
+                </div>
+                
+                <div class="podcasts-grid" id="podcastsGrid">
+                    ${renderPodcasts()}
+                </div>
+            </div>
+        `;
+        
+        setupPodcastsEvents();
+    } catch (error) {
+        console.error('Error loading podcasts:', error);
+        showError(container, 'Erro ao carregar podcasts');
+    }
 }
 
 function renderPodcasts() {
@@ -116,12 +68,13 @@ function renderPodcasts() {
 }
 
 function createPodcastCard(podcast) {
-    const followersFormatted = (podcast.followers / 1000).toFixed(0) + 'K';
+    const followersFormatted = podcast.followers > 0 ? ((podcast.followers / 1000).toFixed(0) + 'K') : '';
+    const statsDisplay = followersFormatted ? `<span>${podcast.episodes} episódios</span><span>•</span><span>${followersFormatted} seguidores</span>` : `<span>${podcast.episodes} episódios</span>`;
     
     return `
-        <div class="podcast-card" data-podcast-id="${podcast.id}">
+        <div class="podcast-card" data-podcast-id="${podcast.id}" data-browse-id="${podcast.browseId || podcast.id}">
             <div class="podcast-card-header">
-                <img src="${podcast.image}" alt="${podcast.title}" class="podcast-card-image" loading="lazy">
+                <img src="${podcast.image || 'assets/images/covers/placeholder.svg'}" alt="${podcast.title}" class="podcast-card-image" loading="lazy">
                 <button class="btn-follow-podcast ${podcast.isFollowing ? 'following' : ''}" 
                         data-podcast-id="${podcast.id}" 
                         aria-label="${podcast.isFollowing ? 'Deixar de seguir' : 'Seguir'}">
@@ -130,18 +83,18 @@ function createPodcastCard(podcast) {
             </div>
             <div class="podcast-card-content">
                 <h3 class="podcast-card-title">${podcast.title}</h3>
-                <p class="podcast-card-author">${podcast.author}</p>
-                <p class="podcast-card-description">${podcast.description}</p>
+                <p class="podcast-card-author">${podcast.author || 'Unknown Author'}</p>
+                ${podcast.description ? `<p class="podcast-card-description">${podcast.description}</p>` : ''}
                 <div class="podcast-card-stats">
-                    <span>${podcast.episodes} episódios</span>
-                    <span>•</span>
-                    <span>${followersFormatted} seguidores</span>
+                    ${statsDisplay}
                 </div>
             </div>
+            ${podcast.latestEpisodes && podcast.latestEpisodes.length > 0 ? `
             <div class="podcast-episodes">
                 <h4 class="episodes-title">Episódios Recentes</h4>
                 ${podcast.latestEpisodes.map(episode => createEpisodeItem(episode, podcast.id)).join('')}
             </div>
+            ` : ''}
         </div>
     `;
 }
