@@ -4,5 +4,5 @@ flask-compress==1.14
 ytmusicapi>=1.8.0
 requests>=2.32.2
 gunicorn==21.2.0
-yt-dlp>=2024.8.6
+yt-dlp==2025.10.22
 
