@@ -1,0 +1,532 @@
+/* ====================================
+   RESPONSIVE DESIGN - Media Queries
+   ==================================== */
+
+/* ============ LARGE DESKTOP (1440px+) ============ */
+@media (min-width: 1440px) {
+    .view-container {
+        padding: var(--spacing-2xl) var(--spacing-3xl);
+    }
+    
+    .grid-auto {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+}
+
+/* ============ DESKTOP (1024px - 1439px) ============ */
+@media (max-width: 1439px) {
+    .grid-6 {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* ============ TABLET LANDSCAPE (768px - 1023px) ============ */
+@media (max-width: 1023px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+    
+    .grid-5,
+    .grid-6 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .grid-4 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .header-with-image {
+        padding: var(--spacing-xl);
+    }
+    
+    .header-image {
+        width: 192px;
+        height: 192px;
+    }
+    
+    .header-title {
+        font-size: clamp(1.5rem, 4vw, 4rem);
+    }
+}
+
+/* ============ TABLET PORTRAIT (768px) ============ */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 220px;
+        --player-height: 80px;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: var(--player-height);
+        width: 280px;
+        z-index: calc(var(--z-sidebar) + 10);
+        transition: left var(--transition-slow) var(--ease-in-out);
+        box-shadow: var(--shadow-large);
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    /* Mobile menu toggle */
+    .btn-menu-toggle {
+        display: flex !important;
+    }
+    
+    /* Sidebar close button */
+    .btn-sidebar-close {
+        display: flex !important;
+    }
+    
+    /* Main layout */
+    .app-container {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "main"
+            "player";
+    }
+    
+    /* Top bar */
+    .top-bar {
+        padding: var(--spacing-md);
+    }
+    
+    .user-name {
+        display: none;
+    }
+    
+    /* View container */
+    .view-container {
+        padding: var(--spacing-md);
+    }
+    
+    /* Grids */
+    .grid-3,
+    .grid-4,
+    .grid-5,
+    .grid-6 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .grid-auto {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    /* Header with image */
+    .header-with-image {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--spacing-lg);
+    }
+    
+    .header-image {
+        width: 160px;
+        height: 160px;
+    }
+    
+    /* Player */
+    .player {
+        grid-template-columns: 1fr auto;
+        padding: var(--spacing-sm) var(--spacing-md);
+        gap: var(--spacing-md);
+    }
+    
+    .player-controls {
+        grid-column: 1 / -1;
+        order: -1;
+    }
+    
+    .player-extra {
+        gap: var(--spacing-xs);
+    }
+    
+    .volume-control {
+        display: none;
+    }
+    
+    .controls-buttons {
+        gap: var(--spacing-sm);
+    }
+    
+    .btn-control {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .btn-play-pause {
+        width: 36px;
+        height: 36px;
+    }
+    
+    /* Track item */
+    .track-item {
+        grid-template-columns: 32px 1fr auto;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .track-album,
+    .track-actions {
+        display: none;
+    }
+    
+    .track-image {
+        width: 48px;
+        height: 48px;
+    }
+    
+    /* Carousel */
+    .carousel-item {
+        width: 160px;
+    }
+    
+    /* Cards no carrossel - mobile */
+    .carousel .music-card,
+    .carousel .playlist-card,
+    .carousel .album-card,
+    .carousel .artist-card {
+        width: 140px;
+        min-width: 140px;
+        max-width: 140px;
+    }
+    
+    /* Botão de play sempre visível no mobile */
+    .btn-play-card,
+    .music-card-play {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    /* Esconder botões de navegação do carrossel no mobile (swipe nativo) */
+    .carousel-nav {
+        display: none;
+    }
+    
+    /* Home */
+    .greeting-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .home-hero {
+        height: 300px;
+    }
+    
+    /* Search */
+    .search-input {
+        font-size: var(--font-size-base);
+    }
+    
+    .search-tabs {
+        overflow-x: auto;
+        gap: var(--spacing-md);
+    }
+    
+    /* Charts */
+    .chart-item {
+        grid-template-columns: 32px 48px 1fr auto;
+    }
+    
+    /* Premium plans */
+    .premium-plans {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============ MOBILE (320px - 767px) ============ */
+@media (max-width: 640px) {
+    :root {
+        --font-size-4xl: 2rem;
+        --font-size-3xl: 1.75rem;
+        --font-size-2xl: 1.5rem;
+    }
+    
+    /* Typography */
+    h1 {
+        font-size: var(--font-size-3xl);
+    }
+    
+    h2 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    /* Grids */
+    .grid-2,
+    .grid-3,
+    .grid-4,
+    .grid-5,
+    .grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-auto,
+    .greeting-grid,
+    .quick-picks-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Cards */
+    .music-card,
+    .album-card,
+    .playlist-card {
+        padding: var(--spacing-sm);
+    }
+    
+    .music-card-image,
+    .album-card-image,
+    .playlist-card-image {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    /* Header */
+    .header-with-image {
+        margin: calc(var(--spacing-md) * -1);
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-lg);
+    }
+    
+    .header-image {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .header-title {
+        font-size: clamp(1.5rem, 8vw, 2.5rem);
+    }
+    
+    .header-metadata {
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Hero sections */
+    .home-hero,
+    .artist-hero {
+        height: 250px;
+    }
+    
+    .home-hero-content,
+    .artist-hero-content {
+        padding: var(--spacing-xl);
+    }
+    
+    /* Sections */
+    .section {
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .section-title {
+        font-size: var(--font-size-xl);
+    }
+    
+    /* Player track info */
+    .track-details {
+        min-width: 0;
+    }
+    
+    .track-name {
+        font-size: var(--font-size-xs);
+    }
+    
+    .track-artist {
+        font-size: 0.65rem;
+    }
+    
+    .track-image {
+        width: 48px;
+        height: 48px;
+    }
+    
+    /* Tabs */
+    .library-tabs,
+    .search-tabs,
+    .profile-top-tabs {
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    
+    .library-tabs::-webkit-scrollbar,
+    .search-tabs::-webkit-scrollbar,
+    .profile-top-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Modals */
+    .modal {
+        width: 95%;
+        padding: var(--spacing-lg);
+    }
+    
+    /* Toast */
+    .toast-container {
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
+    }
+    
+    .toast {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    /* Premium */
+    .premium-hero {
+        padding: var(--spacing-xl);
+    }
+    
+    .premium-hero-title {
+        font-size: var(--font-size-2xl);
+    }
+    
+    /* Settings */
+    .settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+    
+    .settings-item-control {
+        width: 100%;
+    }
+    
+    .settings-select,
+    .settings-input {
+        width: 100%;
+    }
+    
+    /* Actions */
+    .artist-actions,
+    .album-actions,
+    .playlist-actions {
+        flex-wrap: wrap;
+    }
+    
+    /* Queue and Lyrics panels */
+    .queue-panel,
+    .lyrics-panel {
+        width: 100%;
+        max-width: 100%;
+        left: 0;
+        right: 0;
+        margin: 0;
+        border-radius: 0;
+        max-height: 70vh;
+    }
+    
+    /* Fullscreen player */
+    .fullscreen-content {
+        flex-direction: column;
+        padding: var(--spacing-lg);
+        gap: var(--spacing-lg);
+    }
+    
+    .fullscreen-image {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* ============ SMALL MOBILE (320px - 479px) ============ */
+@media (max-width: 479px) {
+    .view-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .carousel-item {
+        width: 140px;
+    }
+    
+    /* Cards no carrossel - small mobile */
+    .carousel .music-card,
+    .carousel .playlist-card,
+    .carousel .album-card,
+    .carousel .artist-card {
+        width: 130px;
+        min-width: 130px;
+        max-width: 130px;
+    }
+    
+    .greeting-item-image {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .btn-play-pause {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .btn-play-pause svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* ============ LANDSCAPE MOBILE ============ */
+@media (max-height: 500px) and (orientation: landscape) {
+    .header-with-image {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .header-image {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .home-hero,
+    .artist-hero {
+        height: 200px;
+    }
+}
+
+/* ============ DARK MODE PREFERENCE ============ */
+@media (prefers-color-scheme: dark) {
+    [data-theme="auto"] {
+        /* Dark theme variables already set in variables.css */
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    [data-theme="auto"] {
+        /* Apply light theme variables */
+        --color-bg-primary: #ffffff;
+        --color-bg-secondary: #f6f6f6;
+        --color-bg-tertiary: #e8e8e8;
+        --color-bg-elevated: #ffffff;
+        --color-bg-hover: rgba(0, 0, 0, 0.05);
+        --color-bg-active: rgba(0, 0, 0, 0.1);
+        
+        --color-text-primary: #000000;
+        --color-text-secondary: #535353;
+        --color-text-tertiary: #808080;
+        --color-text-subdued: #b3b3b3;
+        
+        --border-color: rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* ============ PRINT STYLES ============ */
+@media print {
+    .sidebar,
+    .player,
+    .top-bar,
+    .btn,
+    button {
+        display: none !important;
+    }
+    
+    .app-container {
+        grid-template-columns: 1fr;
+        grid-template-areas: "main";
+    }
+    
+    .main-content {
+        overflow: visible;
+    }
+}
+
