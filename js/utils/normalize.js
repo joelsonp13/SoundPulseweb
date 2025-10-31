@@ -29,18 +29,13 @@ export function normalizeTrack(ytTrack, fallbackImage = null) {
         }
     }
 
-    // 🐛 DEBUG: Ver thumbnails
-    console.log('📸 Track thumbnails:', ytTrack.thumbnails);
-    console.log('📸 Track thumbnail:', ytTrack.thumbnail);
-    console.log('📸 Fallback image:', fallbackImage);
+    // Obter imagem da track
     const trackImage = getThumbnail(ytTrack.thumbnails || ytTrack.thumbnail);
-    console.log('📸 Parsed track image:', trackImage);
     
     // Se não tem imagem própria e tem fallback, usar fallback
     const finalImage = (trackImage === 'assets/images/covers/placeholder.svg' && fallbackImage) 
         ? fallbackImage 
         : trackImage;
-    console.log('📸 Final track image:', finalImage);
 
     return {
         id: ytTrack.videoId || ytTrack.id,
@@ -68,9 +63,6 @@ export function normalizeTrack(ytTrack, fallbackImage = null) {
  */
 export function normalizeArtist(ytArtist, opts = {}) {
     if (!ytArtist) return null;
-
-    // 🐛 DEBUG: Ver estrutura real dos dados do backend
-    console.log('🎤 Dados brutos do artista:', ytArtist);
 
     // O browseId do artista pode vir como browseId, id ou channelId
     const artistId = ytArtist.browseId || ytArtist.id || ytArtist.channelId;
