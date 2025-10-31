@@ -102,7 +102,19 @@ class YouTubePlayer {
             return false;
         }
         
+        if (!videoId || typeof videoId !== 'string' || videoId.length < 11) {
+            console.error('❌ videoId inválido:', videoId);
+            return false;
+        }
+        
         this.currentVideoId = videoId;
+        
+        // Validar formato básico do videoId (Youtube IDs têm 11 caracteres)
+        if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+            console.error('❌ videoId com formato inválido:', videoId);
+            return false;
+        }
+        
         this.player.loadVideoById(videoId);
         return true;
     }

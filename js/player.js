@@ -107,32 +107,36 @@ class MusicPlayer {
         this.ytPlayer.onError(async (errorCode, errorMsg) => {
             console.error(`❌ YouTube Player erro: ${errorMsg}`);
             
-            // 🚀 ERRO 150/101: Vídeo bloqueado para embed → USAR FALLBACK AUDIO
-            if (errorCode === 150 || errorCode === 101) {
-                const videoId = this.currentTrack?.videoId || this.currentTrack?.id;
+            // 🚀 ERRO 150/101/100/2: Tentar FALLBACK AUDIO para vários tipos de erro
+            const videoId = this.currentTrack?.videoId || this.currentTrack?.id;
+            
+            // Erros que podem ser resolvidos com fallback stream direto
+            if ((errorCode === 150 || errorCode === 101 || errorCode === 100 || errorCode === 2) && videoId) {
+                console.log(`🔄 Erro ${errorCode}. Tentando fallback com stream direto...`);
+                this.showToast(' Aguarde por favor...', 'info');
                 
-                if (videoId) {
-                    console.log(`🔄 Vídeo bloqueado. Tentando fallback com stream direto...`);
-                    this.showToast(' Aguarde por favor...', 'info');
-                    // Usar prefetch se já disponível
-                    if (this._prefetch.videoId === videoId && this._prefetch.url) {
-                        await this.loadDirectStream(videoId, this._prefetch.url);
+                // Usar prefetch se já disponível
+                if (this._prefetch.videoId === videoId && this._prefetch.url) {
+                    await this.loadDirectStream(videoId, this._prefetch.url);
+                    return;
+                }
+                
+                // Se estiver em andamento, aguardar
+                if (this._prefetch.videoId === videoId && this._prefetch.promise) {
+                    try {
+                        const url = await this._prefetch.promise;
+                        await this.loadDirectStream(videoId, url);
+                        return;
+                    } catch (e) {
+                        // fallback para fetch direto
+                        await this.loadDirectStream(videoId);
                         return;
                     }
-                    // Se estiver em andamento, aguardar
-                    if (this._prefetch.videoId === videoId && this._prefetch.promise) {
-                        try {
-                            const url = await this._prefetch.promise;
-                            await this.loadDirectStream(videoId, url);
-                            return;
-                        } catch (e) {
-                            // fallback para fetch direto
-                        }
-                    }
-                    // fallback padrão
-                    await this.loadDirectStream(videoId);
-                    return; // NÃO pular para próxima
                 }
+                
+                // fallback padrão
+                await this.loadDirectStream(videoId);
+                return; // NÃO pular para próxima
             }
             
             // Outros erros: pular para próxima música
@@ -415,6 +419,12 @@ class MusicPlayer {
                 const response = await fetch(`${API_BASE_URL}/api/song/${videoId}`, {
                     signal: this._abortController.signal
                 });
+                
+                // Verificar se response é OK antes de fazer parse
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const songData = await response.json();
                 
                 // Converter duração se vier como string "3:45"
