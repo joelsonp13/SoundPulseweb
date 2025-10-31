@@ -234,6 +234,21 @@ export const api = {
     },
 
     /**
+     * PODCASTS SEARCH - Buscar podcasts por query
+     */
+    async searchPodcasts(query) {
+        const params = new URLSearchParams({ q: query });
+        return await fetchAPI(`/api/podcasts/search?${params}`);
+    },
+
+    /**
+     * PODCAST DETAIL - Detalhes completos de um podcast
+     */
+    async getPodcastDetail(browseId, limit = 100) {
+        return await fetchAPI(`/api/podcast/${browseId}?limit=${limit}`);
+    },
+
+    /**
      * HEALTH - Verificar se backend está online
      */
     async checkHealth() {

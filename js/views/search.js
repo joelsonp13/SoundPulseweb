@@ -46,6 +46,7 @@ export function initSearchView() {
                 <button class="search-tab" data-tab="artists">Artistas</button>
                 <button class="search-tab" data-tab="albums">Álbuns</button>
                 <button class="search-tab" data-tab="playlists">Playlists</button>
+                <button class="search-tab" data-tab="podcasts">Podcasts</button>
             </div>
             
             <div class="search-results" id="searchResults">

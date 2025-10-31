@@ -153,6 +153,10 @@
     position: relative;
 }
 
+.track-number .number {
+    display: block;
+}
+
 .track-number .play-icon {
     display: none;
     position: absolute;

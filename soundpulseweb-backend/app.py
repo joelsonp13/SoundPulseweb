@@ -213,8 +213,24 @@ def get_song(video_id):
     Obter detalhes completos de uma música
     Retorna: título, artista, álbum, duração, thumbnails, etc.
     """
-    song = yt.get_song(video_id)
-    return jsonify(song)
+    song_data = yt.get_song(video_id)
+    
+    # Extrair videoDetails
+    video_details = song_data.get('videoDetails', {})
+    if not video_details:
+        return jsonify({'error': 'No video details found'}), 404
+    
+    # Normalizar para o formato esperado pelo frontend
+    normalized = {
+        'videoId': video_details.get('videoId', video_id),
+        'title': video_details.get('title', 'Música Desconhecida'),
+        'artist': video_details.get('author', 'Artista Desconhecido'),
+        'duration': video_details.get('lengthSeconds', 0),
+        'thumbnails': video_details.get('thumbnail', {}).get('thumbnails', []),
+        'viewCount': video_details.get('viewCount', 0)
+    }
+    
+    return jsonify(normalized)
 
 @app.route('/api/song/<video_id>/related', methods=['GET'])
 @handle_errors
@@ -334,6 +350,16 @@ def get_album(browse_id):
     Obter detalhes completos de álbum
     """
     album = yt.get_album(browse_id)
+    
+    # 🐛 DEBUG: Ver estrutura dos dados
+    if album.get('tracks'):
+        first_track = album['tracks'][0]
+        print(f"[ALBUM DEBUG] First track title: {first_track.get('title')}")
+        print(f"[ALBUM DEBUG] First track has thumbnails: {'thumbnails' in first_track}")
+        print(f"[ALBUM DEBUG] First track thumbnails value: {first_track.get('thumbnails')}")
+        print(f"[ALBUM DEBUG] First track has thumbnail: {'thumbnail' in first_track}")
+        print(f"[ALBUM DEBUG] First track thumbnail value: {first_track.get('thumbnail')}")
+    
     return jsonify(album)
 
 # ============================================
@@ -518,7 +544,8 @@ def get_podcasts():
                 for ep in podcast_details.get('episodes', [])[:3]:
                     duration_sec = parse_duration_to_seconds(ep.get('duration', '0'))
                     episode_data = {
-                        'id': ep.get('browseId', ep.get('videoId', '')),
+                        'id': ep.get('videoId', ep.get('browseId', '')),  # Priorizar videoId
+                        'videoId': ep.get('videoId', ''),  # Adicionar videoId separado
                         'title': ep.get('title', 'Unknown Episode'),
                         'duration': duration_sec,
                         'date': ep.get('date', ''),
@@ -571,6 +598,126 @@ def parse_duration_to_seconds(duration_str):
             pass
     
     return total_seconds
+
+@app.route('/api/podcasts/search', methods=['GET'])
+@handle_errors
+@timed_cache(seconds=1800)
+def search_podcasts():
+    """
+    Buscar podcasts por query string
+    Query params: q (required)
+    """
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify({'results': []}), 400
+    
+    limit = int(request.args.get('limit', 20))
+    
+    try:
+        # Buscar podcasts por query
+        search_results = yt.search(query, filter=None, limit=limit*2)
+        
+        # Filtrar apenas resultados do tipo podcast
+        podcast_results = [r for r in search_results if r.get('resultType') == 'podcast']
+        
+        # Limitar e buscar detalhes
+        podcasts = []
+        for p in podcast_results[:limit]:
+            try:
+                browse_id = p.get('browseId')
+                if not browse_id:
+                    continue
+                
+                podcast_details = yt.get_podcast(browse_id, limit=3)
+                
+                # Normalizar estrutura para o frontend
+                podcast_data = {
+                    'id': browse_id,
+                    'browseId': browse_id,
+                    'title': podcast_details.get('title', p.get('title', 'Unknown Podcast')),
+                    'author': podcast_details.get('author', {}).get('name', 'Unknown Author'),
+                    'description': podcast_details.get('description', '')[:200] + '...' if len(podcast_details.get('description', '')) > 200 else podcast_details.get('description', ''),
+                    'image': get_best_thumbnail(podcast_details.get('thumbnails', []) or p.get('thumbnails', [])),
+                    'episodes': len(podcast_details.get('episodes', [])),
+                    'followers': 0,
+                    'isFollowing': False,
+                    'latestEpisodes': []
+                }
+                
+                # Adicionar episódios recentes
+                for ep in podcast_details.get('episodes', [])[:3]:
+                    duration_sec = parse_duration_to_seconds(ep.get('duration', '0'))
+                    episode_data = {
+                        'id': ep.get('videoId', ep.get('browseId', '')),
+                        'videoId': ep.get('videoId', ''),
+                        'title': ep.get('title', 'Unknown Episode'),
+                        'duration': duration_sec,
+                        'date': ep.get('date', ''),
+                        'progress': 0
+                    }
+                    podcast_data['latestEpisodes'].append(episode_data)
+                
+                podcasts.append(podcast_data)
+                
+            except Exception as e:
+                print(f"[PODCAST SEARCH] Erro ao buscar detalhes de {p.get('title', 'Unknown')}: {e}")
+                continue
+        
+        return jsonify({'results': podcasts})
+        
+    except Exception as e:
+        print(f"[PODCAST SEARCH] Erro ao buscar podcasts: {e}")
+        return jsonify({'results': [], 'error': str(e)})
+
+@app.route('/api/podcast/<browse_id>', methods=['GET'])
+@handle_errors
+@timed_cache(seconds=1800)
+def get_podcast_detail(browse_id):
+    """
+    Obter detalhes completos de um podcast com todos os episódios
+    Query params: limit (default: 100)
+    """
+    limit = int(request.args.get('limit', 100))
+    
+    try:
+        podcast = yt.get_podcast(browse_id, limit=limit)
+        
+        # Normalizar estrutura
+        normalized_podcast = {
+            'id': browse_id,
+            'browseId': browse_id,
+            'title': podcast.get('title', 'Unknown Podcast'),
+            'author': podcast.get('author', {}).get('name', 'Unknown Author'),
+            'description': podcast.get('description', ''),
+            'image': get_best_thumbnail(podcast.get('thumbnails', [])),
+            'thumbnails': podcast.get('thumbnails', []),
+            'episodes': podcast.get('episodes', [])
+        }
+        
+        # Normalizar episódios
+        normalized_episodes = []
+        for ep in normalized_podcast.get('episodes', []):
+            duration_sec = parse_duration_to_seconds(ep.get('duration', '0'))
+            episode_data = {
+                'id': ep.get('videoId', ep.get('browseId', '')),
+                'videoId': ep.get('videoId', ''),
+                'browseId': ep.get('browseId', ''),
+                'title': ep.get('title', 'Unknown Episode'),
+                'description': ep.get('description', ''),
+                'duration': duration_sec,
+                'durationRaw': ep.get('duration', ''),
+                'date': ep.get('date', ''),
+                'thumbnails': ep.get('thumbnails', [])
+            }
+            normalized_episodes.append(episode_data)
+        
+        normalized_podcast['episodes'] = normalized_episodes
+        
+        return jsonify(normalized_podcast)
+        
+    except Exception as e:
+        print(f"[PODCAST DETAIL] Erro ao buscar detalhes: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # ============================================
 # ERROR HANDLERS

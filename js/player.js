@@ -42,6 +42,9 @@ class MusicPlayer {
         // Prefetch de stream direto
         this._prefetch = { videoId: null, promise: null, url: null };
         
+        // AbortController para cancelar requisições em andamento
+        this._abortController = null;
+        
         // Initialize from storage
         this.loadState();
         
@@ -146,7 +149,9 @@ class MusicPlayer {
         this._prefetch = { videoId, promise: null, url: null };
         this._prefetch.promise = (async () => {
             try {
-                const resp = await fetch(`${API_BASE_URL}/api/stream/${videoId}`);
+                const resp = await fetch(`${API_BASE_URL}/api/stream/${videoId}`, {
+                    signal: this._abortController?.signal
+                });
                 if (!resp.ok) {
                     throw new Error(`HTTP ${resp.status}`);
                 }
@@ -157,6 +162,10 @@ class MusicPlayer {
                 }
                 throw new Error('Stream URL não encontrado');
             } catch (e) {
+                // Se foi abortado, não fazer nada
+                if (e.name === 'AbortError') {
+                    return null;
+                }
                 // Não quebrar fluxo por falha de prefetch
                 console.warn('Prefetch stream falhou:', e.message || e);
                 throw e;
@@ -206,7 +215,9 @@ class MusicPlayer {
             // Usar URL já prefetechada ou buscar
             let streamUrl = prefetchedUrl;
             if (!streamUrl) {
-                const response = await fetch(`${API_BASE_URL}/api/stream/${videoId}`);
+                const response = await fetch(`${API_BASE_URL}/api/stream/${videoId}`, {
+                    signal: this._abortController?.signal
+                });
                 if (!response.ok) {
                     // Em caso de 404/unavailable, pular para a próxima música
                     if (response.status === 404) {
@@ -237,6 +248,11 @@ class MusicPlayer {
             this.showToast(' Obrigado por aguardar!', 'success');
             
         } catch (error) {
+            // Se foi abortado, não fazer nada
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Load stream cancelado - carregando nova música');
+                return;
+            }
             console.error('❌ Erro ao carregar stream direto:', error);
             this.showToast(' Não foi possível tocar esta música. Pulando...', 'error');
             this.next();
@@ -350,6 +366,12 @@ class MusicPlayer {
     async loadTrack(videoIdOrTrack) {
         if (!videoIdOrTrack) return false;
         
+        // ⛔ CANCELAR requisições e carregamentos anteriores
+        if (this._abortController) {
+            this._abortController.abort();
+        }
+        this._abortController = new AbortController();
+        
         // 🔄 RESETAR FALLBACK (tentar YouTube IFrame primeiro)
         this.usingFallback = false;
         this.fallbackAudio.pause();
@@ -369,9 +391,6 @@ class MusicPlayer {
             // Recebeu videoId - BUSCAR DADOS COMPLETOS DO BACKEND
             videoId = videoIdOrTrack;
             
-            // Prefetch do stream direto em paralelo
-            this._startPrefetch(videoId);
-            
             // Criar objeto temporário enquanto carrega
             this.currentTrack = {
                 id: videoId,
@@ -388,9 +407,14 @@ class MusicPlayer {
             
             console.log(`📺 Carregando música pelo videoId: ${videoId}`);
             
+            // Prefetch do stream direto em paralelo (APÓS criar placeholder)
+            this._startPrefetch(videoId);
+            
             // Buscar dados completos do backend (async)
             try {
-                const response = await fetch(`${API_BASE_URL}/api/song/${videoId}`);
+                const response = await fetch(`${API_BASE_URL}/api/song/${videoId}`, {
+                    signal: this._abortController.signal
+                });
                 const songData = await response.json();
                 
                 // Converter duração se vier como string "3:45"
@@ -405,12 +429,15 @@ class MusicPlayer {
                 }
                 
                 // Criar objeto track completo com dados do backend
+                // Backend retorna 'artist' como string, não 'artists' como array
+                const artistName = songData.artist || songData.artists?.[0]?.name || 'Artista Desconhecido';
+                
                 track = {
                     id: videoId,
                     videoId: videoId,
                     title: songData.title || 'Música Desconhecida',
-                    artist: songData.artists?.[0]?.name || 'Artista Desconhecido',
-                    artistName: songData.artists?.[0]?.name || 'Artista Desconhecido',
+                    artist: artistName,
+                    artistName: artistName,
                     artistId: songData.artists?.[0]?.id,
                     image: this.getBestThumbnail(songData.thumbnails),
                     duration: duration,
@@ -420,6 +447,11 @@ class MusicPlayer {
                 
                 console.log(`✅ Dados da música carregados:`, track);
             } catch (error) {
+                // Se foi abortado, não fazer nada (nova música já está carregando)
+                if (error.name === 'AbortError') {
+                    console.log('⚠️ Requisição cancelada - carregando nova música');
+                    return false;
+                }
                 console.error(`❌ Erro ao buscar dados da música:`, error);
                 // Manter placeholder se falhar
                 track = this.currentTrack;
@@ -436,6 +468,11 @@ class MusicPlayer {
         }
         
         this.currentTrack = track;
+        
+        // Pausar YouTube Player se estiver tocando
+        if (this.ytPlayer.isReady && this.ytPlayer.isPlaying()) {
+            this.ytPlayer.pause();
+        }
         
         // Load video no YouTube Player
         if (this.ytPlayer.isReady) {
@@ -556,7 +593,14 @@ class MusicPlayer {
     
     previous() {
         // If more than 3 seconds played, restart current track
-        if (this.audio && this.audio.currentTime > 3) {
+        let currentTime = 0;
+        if (this.usingFallback) {
+            currentTime = this.fallbackAudio.currentTime || 0;
+        } else if (this.ytPlayer && this.ytPlayer.isReady) {
+            currentTime = this.ytPlayer.getCurrentTime() || 0;
+        }
+        
+        if (currentTime > 3) {
             this.seek(0);
             return;
         }

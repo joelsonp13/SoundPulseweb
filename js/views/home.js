@@ -200,15 +200,6 @@ function renderCharts(chartsData) {
     // CORREÇÃO: chartsData.videos retorna playlists (com playlistId), não músicas (com videoId)
     const playlists = chartsData.videos || chartsData.trending || [];
     
-    // Debug: verificar estrutura dos dados
-    if (playlists.length > 0) {
-        console.log('📊 Charts data structure:', { 
-            firstItem: playlists[0], 
-            hasPlaylistId: !!playlists[0]?.playlistId,
-            hasVideoId: !!playlists[0]?.videoId
-        });
-    }
-    
     if (playlists.length === 0) {
         carousel.innerHTML = '<p style="color: var(--color-text-secondary);">Nenhum chart disponível</p>';
         return;
@@ -219,7 +210,6 @@ function renderCharts(chartsData) {
         
         // Validação: ignorar items sem playlistId
         if (!playlistId) {
-            console.warn('⚠️ Chart item sem playlistId:', track);
             return '';
         }
         
@@ -258,8 +248,6 @@ function renderCharts(chartsData) {
             if (playlistId) {
                 // Navegar para página da playlist em vez de tentar tocar
                 window.location.hash = `#/playlist/${playlistId}`;
-            } else {
-                console.error('❌ Card sem playlistId:', card);
             }
         };
         card.addEventListener('click', handler);
@@ -272,46 +260,26 @@ function renderHomeSections(homeData) {
     
     if (!sectionsContainer) return;
     
-    // Debug: verificar estrutura dos dados
-    console.log('📊 Home data structure:', { 
-        isArray: Array.isArray(homeData),
-        length: Array.isArray(homeData) ? homeData.length : 'N/A',
-        firstSection: Array.isArray(homeData) && homeData.length > 0 ? homeData[0] : null,
-        rawData: homeData
-    });
-    
     // Home data do ytmusicapi É um array direto de seções
     const sections = Array.isArray(homeData) ? homeData : [];
     
     if (sections.length === 0) {
-        console.warn('⚠️ Nenhuma seção encontrada em homeData');
         return;
     }
-    
-    console.log(`✅ Renderizando ${sections.length} seções`);
     
     // Renderizar cada seção
     const sectionsHTML = sections.map((section, index) => {
         const title = section.title || 'Seção';
         const contents = section.contents || [];
         
-        console.log(`   Seção ${index + 1}: "${title}" - ${contents.length} items`);
-        
         if (contents.length === 0) {
-            console.warn(`   ⚠️ Seção "${title}" vazia`);
             return '';
         }
         
-        // Renderizar items e verificar se retornou HTML
+        // Renderizar items
         const itemsHTML = contents.filter(Boolean).map(item => {
-            const html = renderHomeItem(item);
-            if (!html) {
-                console.warn(`   ⚠️ Item renderizado vazio:`, item);
-            }
-            return html;
+            return renderHomeItem(item);
         }).join('');
-        
-        console.log(`   ↳ Renderizou ${itemsHTML.length} chars de HTML`);
         
         const sectionId = `carousel-${index}`;
         
@@ -339,7 +307,6 @@ function renderHomeSections(homeData) {
         `;
     }).filter(Boolean).join('');
     
-    console.log(`✅ HTML total gerado: ${sectionsHTML.length} chars`);
     sectionsContainer.innerHTML = sectionsHTML;
     
     // Add click handlers to all items
@@ -357,8 +324,15 @@ function renderHomeItem(item) {
         } else if (item.playlistId) {
             type = 'playlist';
         } else if (item.browseId) {
-            // Precisamos detectar se é album, artist, etc pela estrutura
-            type = 'unknown';
+            // Detectar se é album, artist, etc pela estrutura
+            // Albums normalmente têm artists[] e não têm videoId
+            if (item.artists && item.artists.length > 0 && !item.videoId) {
+                type = 'album';
+            } else if (item.subscribers !== undefined || item.followers !== undefined) {
+                type = 'artist';
+            } else {
+                type = 'playlist'; // Default para playlist se não conseguir detectar
+            }
         }
     }
     
@@ -445,10 +419,7 @@ function setupHeroButton(chartsData) {
         const firstPlaylist = playlists[0];
         const playlistId = firstPlaylist.playlistId;
         
-        console.log('🎯 Hero button clicked:', { firstPlaylist, playlistId }); // Debug
-        
         if (!playlistId) {
-            console.error('❌ Primeira playlist não tem playlistId!', firstPlaylist);
             showToast('❌ Erro: playlist inválida', 'error');
             return;
         }
@@ -473,7 +444,6 @@ function setupHeroButton(chartsData) {
                 showToast('⚠️ Playlist vazia', 'warning');
             }
         } catch (error) {
-            console.error('❌ Erro ao carregar playlist:', error);
             showToast('❌ Erro ao carregar Top Charts', 'error');
         }
     });

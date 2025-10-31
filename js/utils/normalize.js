@@ -4,8 +4,10 @@
 
 /**
  * Normalizar track do backend para formato esperado
+ * @param {Object} ytTrack - Dados brutos da track do backend
+ * @param {string|null} fallbackImage - Imagem a usar quando track não tem thumbnails (útil para álbuns)
  */
-export function normalizeTrack(ytTrack) {
+export function normalizeTrack(ytTrack, fallbackImage = null) {
     if (!ytTrack) return null;
 
     const artistNames = Array.isArray(ytTrack.artists)
@@ -27,6 +29,19 @@ export function normalizeTrack(ytTrack) {
         }
     }
 
+    // 🐛 DEBUG: Ver thumbnails
+    console.log('📸 Track thumbnails:', ytTrack.thumbnails);
+    console.log('📸 Track thumbnail:', ytTrack.thumbnail);
+    console.log('📸 Fallback image:', fallbackImage);
+    const trackImage = getThumbnail(ytTrack.thumbnails || ytTrack.thumbnail);
+    console.log('📸 Parsed track image:', trackImage);
+    
+    // Se não tem imagem própria e tem fallback, usar fallback
+    const finalImage = (trackImage === 'assets/images/covers/placeholder.svg' && fallbackImage) 
+        ? fallbackImage 
+        : trackImage;
+    console.log('📸 Final track image:', finalImage);
+
     return {
         id: ytTrack.videoId || ytTrack.id,
         videoId: ytTrack.videoId || ytTrack.id,
@@ -39,7 +54,7 @@ export function normalizeTrack(ytTrack) {
         artistsDisplay: artistNames.length ? artistNames.join(', ') : primaryArtist,
         album: ytTrack.album?.name || ytTrack.album || '',
         albumId: ytTrack.album?.id,
-        image: getThumbnail(ytTrack.thumbnails || ytTrack.thumbnail),
+        image: finalImage,
         duration: duration,
         year: ytTrack.year,
         isExplicit: ytTrack.isExplicit || false,
@@ -121,10 +136,12 @@ export function normalizePlaylist(ytPlaylist) {
 
 /**
  * Normalizar array de tracks
+ * @param {Array} ytTracks - Array de tracks brutas do backend
+ * @param {string|null} fallbackImage - Imagem a usar quando tracks não têm thumbnails (útil para álbuns)
  */
-export function normalizeTracks(ytTracks) {
+export function normalizeTracks(ytTracks, fallbackImage = null) {
     if (!Array.isArray(ytTracks)) return [];
-    return ytTracks.map(normalizeTrack).filter(Boolean);
+    return ytTracks.map(track => normalizeTrack(track, fallbackImage)).filter(Boolean);
 }
 
 /**

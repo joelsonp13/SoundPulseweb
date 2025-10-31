@@ -96,7 +96,21 @@ function renderMoods(moodsData) {
     const grid = $('#moodsGrid');
     if (!grid) return;
     
-    const moods = moodsData.sections || [];
+    // A API retorna um objeto com categorias agrupadas
+    // Ex: { "Moods & moments": [...], "Genres": [...] }
+    const allMoods = [];
+    
+    // Extrair todas as categorias de todas as seções
+    Object.values(moodsData).forEach(sectionArray => {
+        if (Array.isArray(sectionArray)) {
+            allMoods.push(...sectionArray);
+        }
+    });
+    
+    if (allMoods.length === 0) {
+        grid.innerHTML = '<p style="color: var(--color-text-secondary);">Nenhuma categoria disponível</p>';
+        return;
+    }
     
     const colors = [
         '#E13300', '#AF2896', '#1E3264', '#477D95',
@@ -104,7 +118,7 @@ function renderMoods(moodsData) {
         '#8D67AB', '#E61E32', '#2D46B9', '#509BF5'
     ];
     
-    grid.innerHTML = moods.map((mood, index) => {
+    grid.innerHTML = allMoods.map((mood, index) => {
         const title = mood.title || 'Categoria';
         const params = mood.params || '';
         const color = colors[index % colors.length];

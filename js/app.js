@@ -21,7 +21,7 @@ import { initProfileView } from './views/profile.js';
 import { initSettingsView } from './views/settings.js';
 import { initPremiumView } from './views/premium.js';
 import { initRadioView } from './views/radio.js';
-import { initPodcastsView } from './views/podcasts.js';
+import { initPodcastsView, initPodcastDetailView } from './views/podcasts.js';
 
 class App {
     constructor() {
@@ -107,6 +107,10 @@ class App {
         router.register('/playlist/:id', (params) => {
             console.log('📝 Router → initPlaylistView com params:', params); // Debug
             initPlaylistView(params.id);
+        });
+        router.register('/podcast/:id', (params) => {
+            console.log('🎙️ Router → initPodcastDetailView com params:', params); // Debug
+            initPodcastDetailView(params);
         });
         router.register('/profile', initProfileView);
         router.register('/settings', initSettingsView);

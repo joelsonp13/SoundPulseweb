@@ -12,17 +12,10 @@ export async function initAlbumView(browseId) {
     const container = $('#viewContainer');
     if (!container) return;
     
-    console.log('💿 initAlbumView - browseId recebido:', browseId); // Debug
-    
     showLoading(container, 'single');
     
     try {
-        console.log('🌐 Buscando álbum no backend:', browseId); // Debug
-        
         const albumData = await api.getAlbum(browseId);
-        
-        console.log('✅ Dados do álbum recebidos:', albumData); // Debug
-        
         renderAlbum(container, albumData);
     } catch (error) {
         console.error('❌ Error loading album:', error);
@@ -32,7 +25,14 @@ export async function initAlbumView(browseId) {
 
 function renderAlbum(container, albumData) {
     const album = normalizeAlbum(albumData);
-    const tracks = normalizeTracks(albumData.tracks || []);
+    // Passar album.image como fallbackImage - a normalização já cuida da lógica
+    const tracks = normalizeTracks(albumData.tracks || [], album.image);
+    
+    // 🐛 DEBUG: Ver o que está vindo do backend
+    console.log('🎵 Album image:', album.image);
+    console.log('🎵 First track keys:', Object.keys(albumData.tracks?.[0] || {}));
+    console.log('🎵 First track raw data:', albumData.tracks?.[0]);
+    console.log('🎵 First track normalized:', tracks[0]);
     
     container.innerHTML = `
         <div class="album-view">
@@ -75,25 +75,37 @@ function renderTracks(tracks) {
     
     tracksContainer.innerHTML = tracks.map((track, index) => `
         <div class="track-item" data-video-id="${track.videoId}">
-            <span class="track-number">${index + 1}</span>
+            <span class="track-number">
+                <span class="number">${index + 1}</span>
+                <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </span>
+            <div class="track-image">
+                <img src="${track.image}" alt="${track.title}" loading="lazy">
+            </div>
             <div class="track-info">
                 <div class="track-title">${track.title}</div>
                 <div class="track-artist">${track.artist}</div>
             </div>
             <span class="track-duration">${formatDuration(track.duration)}</span>
             <button class="btn-icon track-play">
-                <svg viewBox="0 0 24 24" fill="currentColor">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                     <path d="M8 5v14l11-7z"/>
                 </svg>
             </button>
         </div>
     `).join('');
     
+    // Extrair array de videoIds para a queue
+    const videoIds = tracks.map(t => t.videoId);
+    
     tracksContainer.querySelectorAll('.track-item').forEach(item => {
         item.addEventListener('click', () => {
             const videoId = item.dataset.videoId;
-            player.loadTrack(videoId);
-            player.play();
+            if (videoId) {
+                player.playTrack(videoId, videoIds);
+            }
         });
     });
 }
@@ -103,9 +115,9 @@ function setupPlayButton(tracks) {
     if (!btn || tracks.length === 0) return;
     
     btn.addEventListener('click', () => {
-        // Load all tracks as queue
-        player.loadTrack(tracks[0].videoId);
-        player.play();
+        // Extrair array de videoIds para a queue
+        const videoIds = tracks.map(t => t.videoId);
+        player.playTrack(videoIds[0], videoIds);
         showToast('🎵 Tocando álbum!', 'success');
     });
 }

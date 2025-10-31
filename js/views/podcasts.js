@@ -6,6 +6,7 @@ import { $ } from '../utils/dom.js';
 import { formatDuration } from '../utils/time.js';
 import api from '../utils/api.js';
 import { showLoading, showError } from '../components/loading.js';
+import player from '../player.js';
 
 let podcastsData = [];
 let currentFilter = 'all';
@@ -23,6 +24,13 @@ export async function initPodcastsView() {
         container.innerHTML = `
             <div class="podcasts-view">
                 <h1 class="podcasts-title">Podcasts</h1>
+                
+                <div class="podcasts-search">
+                    <input type="text" placeholder="Buscar podcasts..." id="podcastSearchInput" class="podcast-search-input">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+                    </svg>
+                </div>
                 
                 <div class="podcasts-filters">
                     <button class="filter-btn active" data-filter="all">Todos</button>
@@ -95,6 +103,11 @@ function createPodcastCard(podcast) {
                 ${podcast.latestEpisodes.map(episode => createEpisodeItem(episode, podcast.id)).join('')}
             </div>
             ` : ''}
+            ${podcast.episodes > 3 ? `
+            <button class="btn-see-more-episodes" data-browse-id="${podcast.browseId || podcast.id}">
+                Ver todos os episódios
+            </button>
+            ` : ''}
         </div>
     `;
 }
@@ -152,7 +165,27 @@ function formatDate(dateStr) {
     return date.toLocaleDateString('pt-BR');
 }
 
+let searchDebounceTimer;
+
 function setupPodcastsEvents() {
+    // Busca de podcasts
+    const searchInput = $('#podcastSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchDebounceTimer);
+            const query = e.target.value.trim();
+            
+            if (query.length > 0) {
+                searchDebounceTimer = setTimeout(() => {
+                    handlePodcastSearch(query);
+                }, 500);
+            } else {
+                // Se limpar a busca, recarregar podcasts padrão
+                handlePodcastSearch('');
+            }
+        });
+    }
+    
     // Filtros
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
@@ -196,6 +229,18 @@ function setupPodcastsEvents() {
             downloadEpisode(episodeId);
         });
     });
+    
+    // Ver mais episódios
+    const seeMoreButtons = document.querySelectorAll('.btn-see-more-episodes');
+    seeMoreButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const browseId = btn.dataset.browseId;
+            if (browseId) {
+                window.location.hash = `#/podcast/${browseId}`;
+            }
+        });
+    });
 }
 
 function toggleFollow(podcastId, btn) {
@@ -207,13 +252,188 @@ function toggleFollow(podcastId, btn) {
     }
 }
 
-function playEpisode(episodeId) {
+async function playEpisode(episodeId) {
     console.log(`Playing episode: ${episodeId}`);
-    alert(`Tocando episódio! (Demo - conectar com player real)`);
+    
+    // Buscar o episódio nos dados para pegar videoId
+    let videoId = episodeId;
+    
+    for (const podcast of podcastsData) {
+        const episode = podcast.latestEpisodes?.find(ep => ep.id === episodeId);
+        if (episode && episode.videoId) {
+            videoId = episode.videoId;
+            break;
+        }
+    }
+    
+    // Se ainda não tiver videoId e começar com MPED, tentar extrair
+    if (!videoId && episodeId.startsWith('MPED')) {
+        videoId = episodeId.substring(4);
+    }
+    
+    if (videoId) {
+        player.loadTrack(videoId);
+        player.play();
+    }
 }
 
 function downloadEpisode(episodeId) {
     console.log(`Downloading episode: ${episodeId}`);
     alert(`Download iniciado! (Demo)`);
+}
+
+async function handlePodcastSearch(query) {
+    const grid = $('#podcastsGrid');
+    if (!grid) return;
+    
+    if (query.length === 0) {
+        // Recarregar podcasts padrão
+        try {
+            const response = await api.getPodcasts('all');
+            podcastsData = response.results || [];
+            grid.innerHTML = renderPodcasts();
+            setupPodcastsEvents();
+        } catch (error) {
+            console.error('Error loading podcasts:', error);
+        }
+        return;
+    }
+    
+    // Mostrar loading
+    grid.innerHTML = '<div class="loading-spinner"></div>';
+    
+    try {
+        const response = await api.searchPodcasts(query);
+        podcastsData = response.results || [];
+        grid.innerHTML = renderPodcasts();
+        setupPodcastsEvents();
+    } catch (error) {
+        console.error('Error searching podcasts:', error);
+        grid.innerHTML = '<div class="empty-state"><h3>Erro ao buscar podcasts</h3></div>';
+    }
+}
+
+export async function initPodcastDetailView(params) {
+    const container = $('#viewContainer');
+    if (!container) return;
+    
+    const browseId = params.id;
+    if (!browseId) {
+        container.innerHTML = '<div class="empty-state"><h3>Podcast não encontrado</h3></div>';
+        return;
+    }
+    
+    showLoading(container, 'list');
+    
+    try {
+        const podcast = await api.getPodcastDetail(browseId);
+        
+        container.innerHTML = `
+            <div class="podcast-detail-view">
+                <div class="podcast-detail-header">
+                    <div class="podcast-detail-cover">
+                        <img src="${podcast.image}" alt="${podcast.title}" loading="eager">
+                    </div>
+                    <div class="podcast-detail-info">
+                        <span class="podcast-detail-type">Podcast</span>
+                        <h1 class="podcast-detail-title">${podcast.title}</h1>
+                        <div class="podcast-detail-author">
+                            <span>por</span>
+                            <span class="author-name">${podcast.author}</span>
+                        </div>
+                        ${podcast.description ? `<p class="podcast-detail-description">${podcast.description}</p>` : ''}
+                        <div class="podcast-detail-meta">
+                            <span>${podcast.episodes?.length || 0} episódios</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="podcast-detail-actions">
+                    <button class="btn btn-primary" id="playPodcast">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Play
+                    </button>
+                </div>
+                
+                <div class="podcast-episodes-list" id="podcastEpisodesList"></div>
+            </div>
+        `;
+        
+        renderPodcastEpisodes(podcast.episodes || []);
+        setupPodcastPlayButton(podcast);
+    } catch (error) {
+        console.error('Error loading podcast:', error);
+        showError(container, 'Erro ao carregar podcast');
+    }
+}
+
+function renderPodcastEpisodes(episodes) {
+    const container = $('#podcastEpisodesList');
+    if (!container) return;
+    
+    if (episodes.length === 0) {
+        container.innerHTML = '<p style="color: var(--color-text-secondary); padding: var(--spacing-xl);">Nenhum episódio disponível</p>';
+        return;
+    }
+    
+    container.innerHTML = episodes.map((episode, index) => `
+        <div class="episode-item" data-episode-id="${episode.id}">
+            <span class="episode-number">${index + 1}</span>
+            <button class="btn-play-episode-detail" 
+                    data-episode-id="${episode.id}"
+                    data-video-id="${episode.videoId}"
+                    aria-label="Tocar episódio">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </button>
+            <div class="episode-info">
+                <h5 class="episode-title">${episode.title}</h5>
+                <div class="episode-meta">
+                    <span class="episode-date">${episode.date || ''}</span>
+                    ${episode.durationRaw ? `<span>•</span><span class="episode-duration">${episode.durationRaw}</span>` : ''}
+                </div>
+                ${episode.description ? `<p class="episode-description">${episode.description.substring(0, 150)}${episode.description.length > 150 ? '...' : ''}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    setupEpisodePlayButtons();
+}
+
+function setupPodcastPlayButton(podcast) {
+    const btn = $('#playPodcast');
+    if (!btn || !podcast.episodes || podcast.episodes.length === 0) return;
+    
+    btn.addEventListener('click', () => {
+        const firstEpisode = podcast.episodes[0];
+        if (firstEpisode && firstEpisode.videoId) {
+            player.loadTrack(firstEpisode.videoId);
+            player.play();
+        }
+    });
+}
+
+function setupEpisodePlayButtons() {
+    document.querySelectorAll('.btn-play-episode-detail').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const videoId = btn.dataset.videoId;
+            if (videoId) {
+                player.loadTrack(videoId);
+                player.play();
+            }
+        });
+    });
+}
+
+function getBestThumbnail(thumbnails) {
+    if (!thumbnails || !Array.isArray(thumbnails) || thumbnails.length === 0) {
+        return 'assets/images/covers/placeholder.svg';
+    }
+    const sortedThumbs = thumbnails.sort((a, b) => (b.width || 0) - (a.width || 0));
+    return sortedThumbs[0]?.url || 'assets/images/covers/placeholder.svg';
 }
 

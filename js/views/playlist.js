@@ -101,12 +101,14 @@ function renderTracks(tracks) {
         </div>
     `).join('');
     
-    tracksContainer.querySelectorAll('.track-item').forEach(item => {
+    // Extrair array de videoIds para a queue
+    const videoIds = tracks.map(t => t.videoId);
+    
+    tracksContainer.querySelectorAll('.track-item').forEach((item, index) => {
         item.addEventListener('click', () => {
             const videoId = item.dataset.videoId;
             if (videoId) {
-                player.loadTrack(videoId);
-                player.play();
+                player.playTrack(videoId, videoIds);
             }
         });
     });
@@ -117,8 +119,9 @@ function setupPlayButton(tracks) {
     if (!btn || tracks.length === 0) return;
     
     btn.addEventListener('click', () => {
-        player.loadTrack(tracks[0].videoId);
-        player.play();
+        // Extrair array de videoIds para a queue
+        const videoIds = tracks.map(t => t.videoId);
+        player.playTrack(videoIds[0], videoIds);
         showToast('🎵 Tocando playlist!', 'success');
     });
 }

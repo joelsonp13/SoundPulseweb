@@ -38,28 +38,36 @@
 .category-card {
     position: relative;
     aspect-ratio: 1 / 1;
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--border-radius-md);
     overflow: hidden;
     cursor: pointer;
-    transition: transform var(--transition-base) var(--ease-in-out);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-xl);
+    transition: all var(--transition-base) var(--ease-in-out);
+    min-height: 200px;
+    background-color: var(--color-bg-secondary);
 }
 
 .category-card:hover {
-    transform: scale(1.05);
+    background-color: var(--color-bg-tertiary);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-large);
 }
 
 .category-card h3 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-white);
-    text-align: center;
+    text-align: left;
     z-index: 2;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    margin: 0;
+    padding: var(--spacing-md);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+    line-height: var(--line-height-tight);
+    word-wrap: break-word;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
 }
 
 .mood-grid {
