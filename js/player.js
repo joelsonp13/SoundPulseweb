@@ -376,9 +376,20 @@ class MusicPlayer {
         }
         this._abortController = new AbortController();
         
+        // 🔄 PAUSAR TUDO IMEDIATAMENTE para evitar overlap de áudio no mobile
+        // Pausar YouTube Player se estiver tocando
+        if (this.ytPlayer.isReady && this.ytPlayer.isPlaying()) {
+            this.ytPlayer.pause();
+        }
+        
+        // Pausar fallback audio se estiver tocando
+        if (this.usingFallback && !this.fallbackAudio.paused) {
+            this.fallbackAudio.pause();
+            this.fallbackAudio.currentTime = 0;
+        }
+        
         // 🔄 RESETAR FALLBACK (tentar YouTube IFrame primeiro)
         this.usingFallback = false;
-        this.fallbackAudio.pause();
         this.fallbackAudio.src = '';
         
         // Mostrar YouTube Player container novamente
@@ -490,11 +501,6 @@ class MusicPlayer {
         }
         
         this.currentTrack = track;
-        
-        // Pausar YouTube Player se estiver tocando
-        if (this.ytPlayer.isReady && this.ytPlayer.isPlaying()) {
-            this.ytPlayer.pause();
-        }
         
         // Load video no YouTube Player
         if (this.ytPlayer.isReady) {
