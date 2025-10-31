@@ -213,24 +213,37 @@ def get_song(video_id):
     Obter detalhes completos de uma música
     Retorna: título, artista, álbum, duração, thumbnails, etc.
     """
-    song_data = yt.get_song(video_id)
-    
-    # Extrair videoDetails
-    video_details = song_data.get('videoDetails', {})
-    if not video_details:
-        return jsonify({'error': 'No video details found'}), 404
-    
-    # Normalizar para o formato esperado pelo frontend
-    normalized = {
-        'videoId': video_details.get('videoId', video_id),
-        'title': video_details.get('title', 'Música Desconhecida'),
-        'artist': video_details.get('author', 'Artista Desconhecido'),
-        'duration': video_details.get('lengthSeconds', 0),
-        'thumbnails': video_details.get('thumbnail', {}).get('thumbnails', []),
-        'viewCount': video_details.get('viewCount', 0)
-    }
-    
-    return jsonify(normalized)
+    try:
+        song_data = yt.get_song(video_id)
+        
+        # Extrair videoDetails
+        video_details = song_data.get('videoDetails', {})
+        
+        # Sempre retornar estrutura válida, mesmo se details vazio
+        # O YouTube IFrame API pode conseguir reproduzir mesmo sem metadados
+        normalized = {
+            'videoId': video_details.get('videoId', video_id),
+            'title': video_details.get('title', 'Música'),
+            'artist': video_details.get('author', 'Artista'),
+            'duration': video_details.get('lengthSeconds', 0),
+            'thumbnails': video_details.get('thumbnail', {}).get('thumbnails', []),
+            'viewCount': video_details.get('viewCount', 0)
+        }
+        
+        return jsonify(normalized)
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[ERRO] get_song falhou para {video_id}: {error_msg}")
+        
+        # Retornar dados mínimos para permitir tentativa de reprodução
+        return jsonify({
+            'videoId': video_id,
+            'title': 'Música',
+            'artist': 'Artista',
+            'duration': 0,
+            'thumbnails': [],
+            'viewCount': 0
+        }), 200  # Retornar 200 para não quebrar fluxo no frontend
 
 @app.route('/api/song/<video_id>/related', methods=['GET'])
 @handle_errors

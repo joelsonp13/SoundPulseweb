@@ -168,7 +168,7 @@ class MusicPlayer {
                 }
                 // Não quebrar fluxo por falha de prefetch
                 console.warn('Prefetch stream falhou:', e.message || e);
-                throw e;
+                return null;
             }
         })();
     }
@@ -456,10 +456,22 @@ class MusicPlayer {
                 // Manter placeholder se falhar
                 track = this.currentTrack;
             }
+            
+            // Garantir que videoId está definido antes de chamar loadVideo
+            if (!videoId) {
+                console.error('❌ videoId inválido');
+                return false;
+            }
         } else {
             // Recebeu objeto track completo do backend
             track = videoIdOrTrack;
             videoId = track.videoId || track.id;
+            
+            // Validar videoId
+            if (!videoId) {
+                console.error('❌ videoId inválido no objeto track');
+                return false;
+            }
             
             // Prefetch do stream direto em paralelo
             this._startPrefetch(videoId);
